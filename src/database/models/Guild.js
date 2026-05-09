@@ -49,8 +49,10 @@ const guildSchema = new mongoose.Schema({
     // ═══ Usuarios Baneados ═══
     bannedUsers: [{ type: String }],
 
-    // ═══ Contadores ═══
+    // ═══ Contadores y Límites ═══
     ticketCounter: { type: Number, default: 0 },
+    totalTicketsCreated: { type: Number, default: 0 },
+    isPremium: { type: Boolean, default: false },
 
 }, { timestamps: true });
 

@@ -122,7 +122,8 @@ export function startDashboard(client) {
     app.get("/api/me", (req, res) => {
         if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
         const { id, username, avatar } = req.session.user;
-        res.json({ id, username, avatar });
+        const isDev = id === "601394346826268673";
+        res.json({ id, username, avatar, isDev });
     });
 
     // ══════════════════════════════════════
@@ -211,6 +212,8 @@ export function startDashboard(client) {
                 icon: guild?.iconURL({ size: 128 }) || null,
                 memberCount: guild?.memberCount || 0,
                 isNativeAdmin: nativeAccess,
+                isPremium: config.isPremium,
+                totalTicketsCreated: config.totalTicketsCreated,
             },
             config: {
                 ticketCategoryId: config.ticketCategoryId,
@@ -373,7 +376,11 @@ export function startDashboard(client) {
         const config = await getGuildConfig(guildId);
 
         if (config.categories.length >= 25) {
-            return res.status(400).json({ error: "Máximo 25 categorías" });
+            return res.status(400).json({ error: "Máximo absoluto de 25 categorías" });
+        }
+
+        if (!config.isPremium && config.categories.length >= 3) {
+            return res.status(403).json({ error: "Límite de 3 categorías alcanzado. Actualiza a Tenancy Premium para categorías ilimitadas." });
         }
 
         if (config.categories.some(c => c.name.toLowerCase() === name.trim().toLowerCase())) {
@@ -455,7 +462,12 @@ export function startDashboard(client) {
 
             if (panel.thumbnail) embed.setThumbnail(panel.thumbnail);
             if (panel.image) embed.setImage(panel.image);
-            if (panel.footer) embed.setFooter({ text: panel.footer });
+
+            if (config.isPremium) {
+                if (panel.footer) embed.setFooter({ text: panel.footer });
+            } else {
+                embed.setFooter({ text: "⚡ Powered by Tenancy" });
+            }
 
             // ═══ Construir Select Menu ═══
             const selectMenu = new StringSelectMenuBuilder()
@@ -518,6 +530,34 @@ export function startDashboard(client) {
         } catch (error) {
             console.error("❌ Error al enviar panel:", error);
             res.status(500).json({ error: "Error al enviar el panel. Verifica que el bot tiene permisos en el canal." });
+        }
+    });
+
+    // ══════════════════════════════════════
+    // API: Dev Terminal (Activar Premium)
+    // ══════════════════════════════════════
+    app.post("/api/dev/premium/:guildId", async (req, res) => {
+        if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
+        
+        // SOLO EL DEVELOPER PUEDE EJECUTAR ESTO
+        const DEV_ID = "601394346826268673"; 
+        if (req.session.user.id !== DEV_ID) {
+            return res.status(403).json({ error: "Acceso denegado. Solo Developer." });
+        }
+
+        const { guildId } = req.params;
+        const { isPremium } = req.body;
+
+        try {
+            await Guild.findOneAndUpdate(
+                { guildId }, 
+                { $set: { isPremium: isPremium === true } },
+                { upsert: true }
+            );
+            invalidateCache(guildId);
+            res.json({ success: true, isPremium });
+        } catch (error) {
+            res.status(500).json({ error: "Error al activar premium" });
         }
     });
 

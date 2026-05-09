@@ -50,6 +50,10 @@
                     <span class="nav-icon"><i class="ph ph-paint-brush-broad"></i></span>
                     <span>UI_OVERRIDE</span>
                 </a>
+                <a href="#" class="nav-item" id="devNavBtn" data-view="devTerminal" style="display:none; color: var(--neon-magenta);">
+                    <span class="nav-icon"><i class="ph ph-code"></i></span>
+                    <span>DEV_TERMINAL</span>
+                </a>
             </nav>
         </aside>
 
@@ -354,6 +358,34 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══ VISTA SECRETA: Dev Terminal ═══ -->
+            <div id="devTerminalView" class="view" style="display:none;">
+                <div class="view-header">
+                    <h1 style="color: var(--neon-magenta);"><i class="ph ph-code"></i> DEV_TERMINAL <span class="cursor-blink"></span></h1>
+                    <p class="view-subtitle">SISTEMA DE ADMINISTRACIÓN GLOBAL - SOLO PROPIETARIO</p>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 style="color: var(--neon-magenta);">Otorgar Premium</h2>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted" style="margin-bottom: 1.5rem;">Introduce la ID del servidor que realizó el pago mediante Binance u otro método para desbloquearle los límites.</p>
+                        <div class="form-group">
+                            <label for="devGuildIdInput" style="color: var(--neon-magenta);">ID del Servidor de Discord</label>
+                            <input type="text" id="devGuildIdInput" class="form-input" placeholder="Ej: 123456789012345678">
+                        </div>
+                        <div class="form-group">
+                            <label for="devPremiumStatus">Estado Premium</label>
+                            <select id="devPremiumStatus" class="form-input">
+                                <option value="true">Activar Premium (TRUE)</option>
+                                <option value="false">Revocar Premium (FALSE)</option>
+                            </select>
+                        </div>
+                        <button class="btn" style="background: rgba(255,0,255,0.1); border-color: var(--neon-magenta); color: var(--neon-magenta); margin-top: 1rem;" id="devPremiumBtn">⚡ EJECUTAR OVERRIDE</button>
                     </div>
                 </div>
             </div>

@@ -10,6 +10,7 @@ import {
 } from "discord.js";
 import { BRAND, COLOR_NAMES } from "../../config/branding.js";
 import { STRINGS } from "../../config/strings.js";
+import { getGuildConfig } from "../../database/cache.js";
 
 // ═══════════════════════════════════════════
 // /embed — Crear y enviar un embed personalizado
@@ -49,6 +50,15 @@ export async function execute(interaction) {
     // ═══ Verificar permisos ═══
     if (!interaction.memberPermissions.has(PermissionFlagsBits.ManageMessages)) {
         return interaction.reply({ content: STRINGS.NO_PERMISSION, flags: MessageFlags.Ephemeral });
+    }
+
+    // ═══ Verificar Premium ═══
+    const config = await getGuildConfig(interaction.guildId);
+    if (!config.isPremium) {
+        return interaction.reply({ 
+            content: "🔒 **Comando Bloqueado**\nEl comando `/embed` es exclusivo de **Tenancy Premium**. Adquiere premium en el dashboard para crear embeds personalizados sin marca de agua.", 
+            flags: MessageFlags.Ephemeral 
+        });
     }
 
     // ═══ Obtener opciones ═══

@@ -3,80 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tenancy — Initialize Sequence</title>
-    <meta name="description" content="Tenancy Multi-tenant system initialization.">
+    <title>Tenancy — El Sistema de Soporte Definitivo</title>
+    <meta name="description" content="Tenancy Multi-tenant system.">
     <link rel="stylesheet" href="/css/style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
-<body class="landing-page">
+<body class="landing-page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; background: #000; background-image: radial-gradient(circle at 50% 0%, rgba(94, 92, 230, 0.2), transparent 50%), radial-gradient(circle at 100% 100%, rgba(50, 173, 230, 0.1), transparent 50%);">
     
-    <nav class="landing-nav" style="position: absolute; top: 0; width: 100%; padding: 1rem 2rem; display: flex; justify-content: space-between; z-index: 10;">
+    <nav class="topbar" style="position: absolute; top: 0; width: 100%; justify-content: space-between; background: transparent; border: none; backdrop-filter: none;">
         <div class="nav-brand">
-            <span class="brand-text">Ten<span class="accent glitch-hover">ancy</span></span>
+            <span class="brand-text" style="font-size: 1.5rem;">Ten<span class="accent">ancy</span></span>
         </div>
-        <a href="/auth/discord" class="btn btn-outline btn-sm glitch-hover">
-            [ ESTABLECER CONEXIÓN ]
-        </a>
     </nav>
 
-    <main class="terminal-wrapper">
-        <div class="terminal-box">
-            <div class="terminal-header">
-                <span class="terminal-title">TENANCY_SYS_V2.0.0</span>
-                <div class="terminal-actions">
-                    <span></span><span></span><span></span>
+    <main class="terminal-wrapper" style="max-width: 800px; text-align: center;">
+        <h1 style="font-size: 4rem; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; background: linear-gradient(135deg, #fff 0%, #a5a5a5 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Soporte de Nueva Generación.</h1>
+        <p style="font-size: 1.25rem; color: var(--text-muted); margin-bottom: 3rem; line-height: 1.6; max-width: 600px; margin-left: auto; margin-right: auto;">
+            Un sistema de tickets multi-tenant con diseño inmersivo, delegación de roles y rendimiento extremo.
+        </p>
+        
+        <div style="display: flex; gap: 1rem; justify-content: center; align-items: center;">
+            <a href="/auth/discord" class="btn btn-primary btn-lg" style="font-size: 1.1rem; padding: 16px 32px; border-radius: 30px;">
+                <i class="ph ph-discord-logo" style="font-size: 1.5rem;"></i> Acceder al Panel
+            </a>
+            <a href="https://discord.com/oauth2/authorize?client_id=1181289902558675026&permissions=8&scope=bot%20applications.commands" target="_blank" class="btn btn-outline btn-lg" style="font-size: 1.1rem; padding: 16px 32px; border-radius: 30px;">
+                <i class="ph ph-rocket" style="font-size: 1.5rem;"></i> Invitar Bot
+            </a>
+        </div>
+
+        <!-- 3D Element Mock -->
+        <div style="margin-top: 4rem; position: relative; width: 100%; height: 200px; perspective: 1000px;">
+            <div style="position: absolute; left: 50%; top: 0; transform: translateX(-50%) rotateX(20deg); width: 80%; height: 300px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px 20px 0 0; backdrop-filter: blur(10px); box-shadow: 0 -20px 50px rgba(94, 92, 230, 0.1);">
+                <div style="padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 12px; height: 12px; border-radius: 50%; background: #FF3B30;"></div>
+                    <div style="width: 12px; height: 12px; border-radius: 50%; background: #FFCC00;"></div>
+                    <div style="width: 12px; height: 12px; border-radius: 50%; background: #28CD41;"></div>
                 </div>
-            </div>
-            <div class="terminal-body" id="terminalOutput">
-                <!-- Lines will be typed here -->
             </div>
         </div>
     </main>
 
-    <script>
-        const lines = [
-            { text: "INICIANDO PROTOCOLO TENANCY...", type: "info", delay: 500 },
-            { text: "CARGANDO MÓDULOS MULTI-TENANT [||||||||||||||||||||] 100%", type: "success", delay: 800 },
-            { text: "CONECTANDO CON BASE DE DATOS MONGODB ATLAS...", type: "info", delay: 600 },
-            { text: "CONEXIÓN ESTABLECIDA.", type: "success", delay: 300 },
-            { text: "AISLANDO ENTORNOS DE SERVIDOR...", type: "info", delay: 400 },
-            { text: "ADVERTENCIA: Interfaz detectada de forma no convencional.", type: "accent", delay: 600 },
-            { text: "SISTEMA DE TICKETS PREMIUM LISTO. ESPERANDO AUTENTICACIÓN OAUTH2.", type: "success", delay: 800 }
-        ];
-
-        const terminal = document.getElementById("terminalOutput");
-        
-        async function typeLines() {
-            for (let line of lines) {
-                await new Promise(r => setTimeout(r, line.delay));
-                const lineDiv = document.createElement("div");
-                lineDiv.className = "terminal-line";
-                
-                const prompt = document.createElement("span");
-                prompt.className = "terminal-prompt";
-                prompt.innerText = "root@tenancy:~#";
-                
-                const text = document.createElement("span");
-                text.className = `terminal-text ${line.type}`;
-                text.innerText = line.text;
-                
-                lineDiv.appendChild(prompt);
-                lineDiv.appendChild(text);
-                terminal.appendChild(lineDiv);
-            }
-            
-            // Show CTA
-            await new Promise(r => setTimeout(r, 800));
-            const ctaDiv = document.createElement("div");
-            ctaDiv.className = "terminal-cta";
-            ctaDiv.innerHTML = `
-                <a href="/auth/discord" class="btn btn-primary glitch-hover">
-                    > EXECUTE_LOGIN()
-                </a>
-            `;
-            terminal.appendChild(ctaDiv);
-        }
-        
-        window.onload = typeLines;
-    </script>
 </body>
 </html>

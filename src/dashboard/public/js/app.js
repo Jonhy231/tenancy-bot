@@ -24,6 +24,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64`
             : `https://cdn.discordapp.com/embed/avatars/0.png`;
         document.getElementById("userAvatar").src = avatarUrl;
+        
+        if (user.isDev) {
+            const devBtn = document.getElementById("devNavBtn");
+            if (devBtn) devBtn.style.display = "flex";
+        }
     } catch { return window.location.href = "/"; }
 
     // Cargar servidores
@@ -110,6 +115,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Evento: guardar personalización
     document.getElementById("saveCustomize").addEventListener("click", saveCustomization);
+
+    // Evento: Dev Terminal Premium
+    const devPremiumBtn = document.getElementById("devPremiumBtn");
+    if (devPremiumBtn) {
+        devPremiumBtn.addEventListener("click", async () => {
+            const gid = document.getElementById("devGuildIdInput").value.trim();
+            const isPremium = document.getElementById("devPremiumStatus").value === "true";
+            if (!gid) return toast("Introduce la ID del servidor", "error");
+
+            try {
+                const res = await fetch(`/api/dev/premium/${gid}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ isPremium })
+                });
+                if (!res.ok) throw new Error();
+                toast(`✅ Estado premium actualizado para ${gid}`);
+                if (gid === currentGuildId) loadServerData(gid);
+            } catch {
+                toast("Error al actualizar premium", "error");
+            }
+        });
+    }
 });
 
 // ═══ Cargar Servidores ═══
@@ -210,8 +238,31 @@ function populateDashboard(data) {
     document.getElementById("embedColorPicker").value = p.color || "#5865F2";
     document.getElementById("embedImage").value = p.image || "";
     document.getElementById("embedThumbnail").value = p.thumbnail || "";
-    document.getElementById("embedFooter").value = p.footer || "";
+    document.getElementById("embedFooter").value = data.guild.isPremium ? (p.footer || "") : "⚡ Powered by Tenancy";
     document.getElementById("greetingText").value = data.config.ticketGreeting || "";
+    
+    // Muro de Pago UI
+    if (!data.guild.isPremium) {
+        document.getElementById("embedFooter").disabled = true;
+        document.getElementById("embedColor").disabled = true;
+        document.getElementById("embedColorPicker").disabled = true;
+        if (!document.getElementById("premiumNotice")) {
+            const notice = document.createElement("div");
+            notice.id = "premiumNotice";
+            notice.className = "card-body";
+            notice.style.background = "rgba(0, 255, 255, 0.1)";
+            notice.style.borderBottom = "1px solid var(--neon-cyan)";
+            notice.innerHTML = `<p style="color: var(--neon-cyan); margin-bottom: 0;">🔒 <b>Actualiza a Premium</b> para personalizar colores, eliminar la marca de agua y tener categorías infinitas. Paga con Binance Pay.</p>`;
+            document.getElementById("embedTitle").parentElement.parentElement.prepend(notice);
+        }
+    } else {
+        document.getElementById("embedFooter").disabled = false;
+        document.getElementById("embedColor").disabled = false;
+        document.getElementById("embedColorPicker").disabled = false;
+        const notice = document.getElementById("premiumNotice");
+        if (notice) notice.remove();
+    }
+    
     updatePreview();
 }
 

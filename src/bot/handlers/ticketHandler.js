@@ -30,6 +30,14 @@ export async function handleTicketSelect(interaction) {
         });
     }
 
+    // Verificar Límite Gratuito
+    if (!guildConfig.isPremium && guildConfig.totalTicketsCreated >= 50) {
+        return interaction.reply({
+            content: "🔒 **Límite Gratuito Alcanzado**\nEste servidor ha superado el límite de 50 tickets. El administrador debe actualizar a **Tenancy Premium** para desbloquear tickets ilimitados.",
+            flags: [MessageFlags.Ephemeral],
+        });
+    }
+
     // Verificar si ya tiene un ticket abierto
     const existingTicket = await Ticket.findOne({
         guildId: interaction.guildId,
@@ -88,7 +96,11 @@ export async function handleTicketModal(interaction) {
 
     // Incrementar contador de tickets
     const newCount = (guildConfig.ticketCounter || 0) + 1;
-    await updateGuildConfig(interaction.guildId, { ticketCounter: newCount });
+    const newTotal = (guildConfig.totalTicketsCreated || 0) + 1;
+    await updateGuildConfig(interaction.guildId, { 
+        ticketCounter: newCount,
+        totalTicketsCreated: newTotal 
+    });
 
     const ticketName = `${categoryEmoji}┃ticket-${String(newCount).padStart(4, "0")}`;
 

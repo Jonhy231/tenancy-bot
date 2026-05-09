@@ -11,6 +11,7 @@ import {
 import { BRAND } from "../../config/branding.js";
 import { STRINGS } from "../../config/strings.js";
 import { parseColor, isValidImageUrl } from "./embed.js";
+import { getGuildConfig } from "../../database/cache.js";
 
 // ═══════════════════════════════════════════
 // /anuncio — Enviar un anuncio con formato rico
@@ -60,6 +61,15 @@ export async function execute(interaction) {
     // ═══ Verificar permisos ═══
     if (!interaction.memberPermissions.has(PermissionFlagsBits.ManageMessages)) {
         return interaction.reply({ content: STRINGS.NO_PERMISSION, flags: MessageFlags.Ephemeral });
+    }
+
+    // ═══ Verificar Premium ═══
+    const config = await getGuildConfig(interaction.guildId);
+    if (!config.isPremium) {
+        return interaction.reply({ 
+            content: "🔒 **Comando Bloqueado**\nEl comando `/anuncio` es exclusivo de **Tenancy Premium**. Adquiere premium en el dashboard para desbloquear los anuncios globales y con pings.", 
+            flags: MessageFlags.Ephemeral 
+        });
     }
 
     // ═══ Obtener opciones ═══
