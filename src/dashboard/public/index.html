@@ -3,79 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tenancy — Sistema de Tickets Premium</title>
-    <meta name="description" content="Bot de tickets multi-tenant para Discord. Gestión simplificada de soporte para tu comunidad.">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <title>Tenancy — Initialize Sequence</title>
+    <meta name="description" content="Tenancy Multi-tenant system initialization.">
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body class="landing-page">
-    <!-- ═══ Partículas de fondo ═══ -->
-    <div class="bg-particles" id="particles"></div>
     
-    <!-- ═══ Navbar ═══ -->
-    <nav class="landing-nav">
+    <nav class="landing-nav" style="position: absolute; top: 0; width: 100%; padding: 1rem 2rem; display: flex; justify-content: space-between; z-index: 10;">
         <div class="nav-brand">
-            <span class="brand-icon">🏢</span>
-            <span class="brand-text">Ten<span class="accent">ancy</span></span>
+            <span class="brand-text">Ten<span class="accent glitch-hover">ancy</span></span>
         </div>
-        <a href="/auth/discord" class="btn btn-login" id="loginBtn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286z"/></svg>
-            Iniciar Sesión
+        <a href="/auth/discord" class="btn btn-outline btn-sm glitch-hover">
+            [ ESTABLECER CONEXIÓN ]
         </a>
     </nav>
 
-    <!-- ═══ Hero Section ═══ -->
-    <main class="hero">
-        <div class="hero-content">
-            <div class="hero-badge">✨ Multi-Tenant • Multi-Servidor</div>
-            <h1 class="hero-title">
-                Soporte <span class="gradient-text">simplificado</span>
-                <br>para tu comunidad
-            </h1>
-            <p class="hero-subtitle">
-                Sistema de tickets para Discord con apertura en 2 clics, 
-                panel completamente personalizable y dashboard web para administradores.
-            </p>
-            <div class="hero-actions">
-                <a href="/auth/discord" class="btn btn-primary btn-lg">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286z"/></svg>
-                    Acceder al Dashboard
-                </a>
+    <main class="terminal-wrapper">
+        <div class="terminal-box">
+            <div class="terminal-header">
+                <span class="terminal-title">TENANCY_SYS_V2.0.0</span>
+                <div class="terminal-actions">
+                    <span></span><span></span><span></span>
+                </div>
             </div>
-            <!-- ═══ Feature Cards ═══ -->
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3>2 Clics</h3>
-                    <p>Apertura de tickets ultra-rápida con Select Menu + Modal</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🎨</div>
-                    <h3>Personalizable</h3>
-                    <p>Panel con embed, imágenes, colores y mensajes personalizados</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🏢</div>
-                    <h3>Multi-Servidor</h3>
-                    <p>Cada servidor con su propia configuración aislada</p>
-                </div>
+            <div class="terminal-body" id="terminalOutput">
+                <!-- Lines will be typed here -->
             </div>
         </div>
     </main>
 
     <script>
-        // Generar partículas de fondo
-        const container = document.getElementById('particles');
-        for (let i = 0; i < 50; i++) {
-            const p = document.createElement('div');
-            p.className = 'particle';
-            p.style.left = Math.random() * 100 + '%';
-            p.style.top = Math.random() * 100 + '%';
-            p.style.animationDelay = Math.random() * 6 + 's';
-            p.style.animationDuration = (4 + Math.random() * 4) + 's';
-            p.style.width = p.style.height = (2 + Math.random() * 4) + 'px';
-            container.appendChild(p);
+        const lines = [
+            { text: "INICIANDO PROTOCOLO TENANCY...", type: "info", delay: 500 },
+            { text: "CARGANDO MÓDULOS MULTI-TENANT [||||||||||||||||||||] 100%", type: "success", delay: 800 },
+            { text: "CONECTANDO CON BASE DE DATOS MONGODB ATLAS...", type: "info", delay: 600 },
+            { text: "CONEXIÓN ESTABLECIDA.", type: "success", delay: 300 },
+            { text: "AISLANDO ENTORNOS DE SERVIDOR...", type: "info", delay: 400 },
+            { text: "ADVERTENCIA: Interfaz detectada de forma no convencional.", type: "accent", delay: 600 },
+            { text: "SISTEMA DE TICKETS PREMIUM LISTO. ESPERANDO AUTENTICACIÓN OAUTH2.", type: "success", delay: 800 }
+        ];
+
+        const terminal = document.getElementById("terminalOutput");
+        
+        async function typeLines() {
+            for (let line of lines) {
+                await new Promise(r => setTimeout(r, line.delay));
+                const lineDiv = document.createElement("div");
+                lineDiv.className = "terminal-line";
+                
+                const prompt = document.createElement("span");
+                prompt.className = "terminal-prompt";
+                prompt.innerText = "root@tenancy:~#";
+                
+                const text = document.createElement("span");
+                text.className = `terminal-text ${line.type}`;
+                text.innerText = line.text;
+                
+                lineDiv.appendChild(prompt);
+                lineDiv.appendChild(text);
+                terminal.appendChild(lineDiv);
+            }
+            
+            // Show CTA
+            await new Promise(r => setTimeout(r, 800));
+            const ctaDiv = document.createElement("div");
+            ctaDiv.className = "terminal-cta";
+            ctaDiv.innerHTML = `
+                <a href="/auth/discord" class="btn btn-primary glitch-hover">
+                    > EXECUTE_LOGIN()
+                </a>
+            `;
+            terminal.appendChild(ctaDiv);
         }
+        
+        window.onload = typeLines;
     </script>
 </body>
 </html>

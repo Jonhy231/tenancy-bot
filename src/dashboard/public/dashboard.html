@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard — Tenancy</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body class="dashboard-page">
@@ -12,8 +13,7 @@
     <!-- ═══ Topbar ═══ -->
     <header class="topbar">
         <div class="topbar-left">
-            <span class="brand-icon">🏢</span>
-            <span class="brand-text">Ten<span class="accent">ancy</span></span>
+            <span class="brand-text glitch-hover">Ten<span class="accent">ancy</span></span>
         </div>
         <div class="topbar-center">
             <select id="serverSelector" class="server-select">
@@ -35,20 +35,20 @@
         <aside class="sidebar" id="sidebar">
             <nav class="sidebar-nav">
                 <a href="#" class="nav-item active" data-view="overview">
-                    <span class="nav-icon">📊</span>
-                    <span>Vista General</span>
+                    <span class="nav-icon"><i class="ph ph-cpu"></i></span>
+                    <span>MONITOR_SYS</span>
                 </a>
                 <a href="#" class="nav-item" data-view="tickets">
-                    <span class="nav-icon">🎫</span>
-                    <span>Tickets</span>
+                    <span class="nav-icon"><i class="ph ph-terminal-window"></i></span>
+                    <span>TICKETS_DB</span>
                 </a>
                 <a href="#" class="nav-item" data-view="config">
-                    <span class="nav-icon">⚙️</span>
-                    <span>Configuración</span>
+                    <span class="nav-icon"><i class="ph ph-faders"></i></span>
+                    <span>SYS_CONFIG</span>
                 </a>
                 <a href="#" class="nav-item" data-view="customize">
-                    <span class="nav-icon">🎨</span>
-                    <span>Personalización</span>
+                    <span class="nav-icon"><i class="ph ph-paint-brush-broad"></i></span>
+                    <span>UI_OVERRIDE</span>
                 </a>
             </nav>
         </aside>
@@ -76,36 +76,36 @@
             <!-- ═══ VISTA: Overview ═══ -->
             <div id="overviewView" class="view" style="display:none;">
                 <div class="view-header">
-                    <h1>📊 Vista General</h1>
-                    <p class="view-subtitle" id="serverName">—</p>
+                    <h1><i class="ph ph-activity"></i> VISTA GENERAL <span class="cursor-blink"></span></h1>
+                    <p class="view-subtitle" id="serverName">TARGET_NODE</p>
                 </div>
                 <div class="stats-grid">
                     <div class="stat-card stat-blue">
                         <div class="stat-value" id="statTotal">0</div>
                         <div class="stat-label">Total Tickets</div>
-                        <div class="stat-icon">🎫</div>
+                        <div class="stat-icon"><i class="ph ph-ticket"></i></div>
                     </div>
                     <div class="stat-card stat-green">
                         <div class="stat-value" id="statOpen">0</div>
                         <div class="stat-label">Tickets Abiertos</div>
-                        <div class="stat-icon">🟢</div>
+                        <div class="stat-icon"><i class="ph ph-folder-open"></i></div>
                     </div>
                     <div class="stat-card stat-red">
                         <div class="stat-value" id="statClosed">0</div>
                         <div class="stat-label">Tickets Cerrados</div>
-                        <div class="stat-icon">🔴</div>
+                        <div class="stat-icon"><i class="ph ph-lock-key"></i></div>
                     </div>
                     <div class="stat-card stat-purple">
                         <div class="stat-value" id="statCategories">0</div>
                         <div class="stat-label">Categorías</div>
-                        <div class="stat-icon">📁</div>
+                        <div class="stat-icon"><i class="ph ph-tree-structure"></i></div>
                     </div>
                 </div>
 
                 <!-- Tickets recientes -->
                 <div class="card">
                     <div class="card-header">
-                        <h2>🕐 Tickets Recientes</h2>
+                        <h2><i class="ph ph-clock-counter-clockwise"></i> TICKETS RECIENTES</h2>
                     </div>
                     <div class="card-body">
                         <div class="table-wrapper">
@@ -132,7 +132,7 @@
             <!-- ═══ VISTA: Tickets ═══ -->
             <div id="ticketsView" class="view" style="display:none;">
                 <div class="view-header">
-                    <h1>🎫 Gestión de Tickets</h1>
+                    <h1><i class="ph ph-terminal-window"></i> GESTIÓN DE TICKETS <span class="cursor-blink"></span></h1>
                 </div>
                 <div class="tabs">
                     <button class="tab active" data-tab="open">🟢 Abiertos (<span id="tabOpenCount">0</span>)</button>
@@ -164,8 +164,8 @@
             <!-- ═══ VISTA: Configuración ═══ -->
             <div id="configView" class="view" style="display:none;">
                 <div class="view-header">
-                    <h1>⚙️ Configuración</h1>
-                    <p class="view-subtitle">Gestiona los roles, canales y categorías de tickets desde aquí</p>
+                    <h1><i class="ph ph-faders"></i> SYS_CONFIG <span class="cursor-blink"></span></h1>
+                    <p class="view-subtitle">PARÁMETROS DE INSTANCIA LOCAL</p>
                 </div>
                 <div class="config-grid">
 
@@ -285,8 +285,8 @@
             <!-- ═══ VISTA: Personalización ═══ -->
             <div id="customizeView" class="view" style="display:none;">
                 <div class="view-header">
-                    <h1>🎨 Personalización del Panel</h1>
-                    <p class="view-subtitle">Configura el aspecto del embed y el mensaje de bienvenida</p>
+                    <h1><i class="ph ph-paint-brush-broad"></i> UI_OVERRIDE <span class="cursor-blink"></span></h1>
+                    <p class="view-subtitle">CONFIGURACIÓN VISUAL DEL EMBED</p>
                 </div>
                 <div class="customize-layout">
                     <!-- Editor -->
