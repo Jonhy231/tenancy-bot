@@ -1,81 +1,348 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tenancy Premium</title>
+    <title>Tenancy Store</title>
     <link rel="stylesheet" href="/css/style.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        .store-bg {
+            background-color: #1a1b26;
+            min-height: 100vh;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            font-family: 'Inter', sans-serif;
+        }
+        /* STORE VIEW */
+        .store-container {
+            width: 100%;
+            max-width: 800px;
+            background: #232736;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin-top: 2rem;
+        }
+        .store-header {
+            background: #f5b027;
+            color: #000;
+            text-align: center;
+            padding: 1rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .store-body {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 2rem;
+        }
+        @media(min-width: 768px) {
+            .store-body { flex-direction: row; }
+        }
+        .server-selector-card {
+            background: #2f354a;
+            border-radius: 8px;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            flex: 1;
+            position: relative;
+        }
+        .server-selector-card select {
+            width: 90%;
+            padding: 10px;
+            margin-top: 10px;
+            background: #1a1b26;
+            color: white;
+            border: 1px solid #4a5578;
+            border-radius: 4px;
+        }
+        .plans-container {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .plan-card {
+            background: #2f354a;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        .plan-card h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+        .plan-card h3 span { color: #a0a8c2; font-size: 1rem; font-weight: 500; }
+        .plan-price { font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; }
+        .plan-price span { font-size: 1rem; color: #a0a8c2; font-weight: 500; }
+        .btn-purchase {
+            width: 100%;
+            background: #232736;
+            color: #f5b027;
+            border: 1px solid #1a1b26;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-purchase:hover { background: #1a1b26; }
+
+        /* CHECKOUT VIEW */
+        .checkout-container {
+            display: none; /* Hidden by default */
+            width: 100%;
+            max-width: 900px;
+            background: #fff;
+            color: #333;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin-top: 2rem;
+            flex-direction: column;
+        }
+        @media(min-width: 768px) {
+            .checkout-container { flex-direction: row; }
+        }
+        .checkout-left {
+            background: #f8f9fa;
+            padding: 2rem;
+            flex: 1;
+            border-right: 1px solid #e9ecef;
+        }
+        .checkout-right {
+            padding: 2rem;
+            flex: 1;
+            background: #fff;
+        }
+        .summary-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 2rem; color: #495057; }
+        .total-price { font-size: 2.5rem; font-weight: 700; color: #f5b027; margin-bottom: 0.5rem; }
+        .summary-item { display: flex; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid #dee2e6; color: #495057; }
+        .summary-item.total { font-weight: 700; border-bottom: none; border-top: 2px solid #dee2e6; margin-top: 1rem; padding-top: 1rem; color: #212529; }
+        
+        .checkout-step { font-size: 1.1rem; font-weight: 600; color: #f5b027; margin-bottom: 1rem; }
+        .checkout-desc { font-size: 0.9rem; color: #6c757d; margin-bottom: 1.5rem; line-height: 1.5; }
+        .form-group-checkout { margin-bottom: 1.5rem; }
+        .form-group-checkout label { display: block; font-size: 0.9rem; font-weight: 600; color: #495057; margin-bottom: 0.5rem; }
+        .form-group-checkout input { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; font-size: 1rem; }
+        
+        .binance-box {
+            background: #fafafa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        .btn-continue {
+            width: 100%;
+            background: #f5b027;
+            color: #fff;
+            border: none;
+            padding: 14px;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: opacity 0.2s;
+        }
+        .btn-continue:hover { opacity: 0.9; }
+
+        .top-nav { width: 100%; max-width: 900px; display: flex; justify-content: space-between; align-items: center; }
+        .top-nav a { color: #a0a8c2; text-decoration: none; font-weight: 500; }
+        .top-nav a:hover { color: #fff; }
+    </style>
 </head>
+<body class="store-bg">
+    
+    <div class="top-nav">
+        <a href="/"><i class="ph ph-arrow-left"></i> Volver al Inicio</a>
+        <span style="font-weight: 700; font-size: 1.5rem;">Ten<span style="color:#f5b027;">ancy</span></span>
+    </div>
 
-<body class="landing-page"
-    style="background: #000; background-image: radial-gradient(circle at 50% 0%, rgba(243, 186, 47, 0.1), transparent 50%); min-height: 100vh; overflow-y: auto;">
-
-    <nav class="topbar"
-        style="position: sticky; top: 0; width: 100%; justify-content: space-between; background: rgba(10, 12, 16, 0.8); border-bottom: var(--border-glass); backdrop-filter: blur(20px); z-index: 50;">
-        <div class="nav-brand">
-            <span class="brand-text" style="font-size: 1.5rem;"><a href="/"
-                    style="color: inherit; text-decoration: none;">Ten<span class="accent">ancy</span></a></span>
+    <!-- VISTA 1: TIENDA -->
+    <div class="store-container" id="storeView">
+        <div class="store-header">
+            Tenancy Store
         </div>
-        <div style="display: flex; gap: 1.5rem; align-items: center;">
-            <a href="/" style="color: var(--text-main); font-weight: 500;">Volver al Inicio</a>
-            <a href="/auth/discord" class="btn btn-primary btn-sm">Panel Web</a>
-        </div>
-    </nav>
-
-    <main
-        style="padding: 4rem 2rem; display: flex; justify-content: center; align-items: center; min-height: calc(100vh - 70px);">
-        <section id="premium" style="width: 100%; max-width: 800px;">
-            <div class="card"
-                style="background: linear-gradient(145deg, rgba(20,22,28,0.8), rgba(243,186,47,0.05)); border-color: rgba(243,186,47,0.3);">
-                <div class="card-body"
-                    style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 3rem;">
-                    <h2 style="font-size: 2.5rem; margin-bottom: 1rem; color: #F3BA2F;"><i class="ph ph-crown"></i>
-                        Tenancy Premium</h2>
-                    <p style="font-size: 1.1rem; color: var(--text-muted); max-width: 600px; margin-bottom: 2rem;">
-                        Desbloquea tickets ilimitados, categorías infinitas, personalización total del embed (colores
-                        sin marca de agua) y anuncios ricos en Discord.
-                    </p>
-
-                    <div
-                        style="background: rgba(0,0,0,0.3); padding: 1.5rem 3rem; border-radius: var(--border-radius-md); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 2.5rem;">
-                        <h3 style="font-size: 2rem; margin-bottom: 0.5rem;">Pago Único: <span
-                                style="color: #F3BA2F;">$29.99</span></h3>
-                        <p class="text-muted">Licencia de por vida para tu servidor.</p>
-                    </div>
-
-                    <h3 style="margin-bottom: 1.5rem; font-size: 1.5rem;">¿Cómo pagar usando Binance Pay?</h3>
-                    <div
-                        style="display: flex; flex-wrap: wrap; gap: 3rem; align-items: center; justify-content: center; margin-bottom: 2.5rem; background: rgba(0,0,0,0.2); padding: 2rem; border-radius: var(--border-radius-md); border: 1px solid rgba(255,255,255,0.05);">
-                        <ol
-                            style="text-align: left; color: var(--text-muted); line-height: 1.8; font-size: 1.1rem; max-width: 400px; margin: 0;">
-                            <li style="margin-bottom: 0.5rem;">Abre tu app de Binance y ve a <strong>Binance
-                                    Pay</strong> (o escanea el QR).</li>
-                            <li style="margin-bottom: 0.5rem;">Envía <strong>29.99 USDT</strong> al Pay ID: <br><code
-                                    style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; color: #fff; font-size: 1.2rem; display: inline-block; margin-top: 5px;">1166529573</code>
-                            </li>
-                            <li style="margin-bottom: 0.5rem; color: #F3BA2F;"><strong>¡Muy importante!</strong> En el
-                                campo de "Nota" del pago, pega la <strong>ID de tu Servidor</strong> de Discord.</li>
-                            <li>Una vez verificado el pago, el Premium se activará.</li>
-                        </ol>
-
-                        <div
-                            style="background: #fff; padding: 10px; border-radius: 10px; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; text-align: center;">
-                            <img src="/img/binance-qr.jpg"
-                                alt="Código QR Binance Pay" style="max-width: 100%; max-height: 100%;">
-                        </div>
-                    </div>
-
-                    <a href="https://p2p.binance.com/" target="_blank" class="btn btn-primary btn-lg"
-                        style="background: #F3BA2F; color: #000; box-shadow: 0 4px 15px rgba(243,186,47,0.3); font-size: 1.2rem; padding: 16px 36px;">
-                        <i class="ph ph-wallet"></i> Ir a Binance
-                    </a>
+        <div class="store-body">
+            <!-- Izquierda: Selector -->
+            <div class="server-selector-card">
+                <img id="serverIcon" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="Server" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 1rem;">
+                <h3 id="serverName" style="margin-bottom: 1rem; color: #fff; font-size: 1.1rem;">Selecciona un servidor</h3>
+                <i class="ph ph-arrows-left-right" style="font-size: 1.5rem; color: #a0a8c2; margin-bottom: 0.5rem;"></i>
+                <select id="serverSelectStore">
+                    <option value="">Cargando servidores...</option>
+                </select>
+            </div>
+            
+            <!-- Derecha: Planes -->
+            <div class="plans-container">
+                <div class="plan-card">
+                    <h3>Tenancy Premium <span>Licencia de por vida</span></h3>
+                    <div class="plan-price">$29.99 <span>/ pago único</span></div>
+                    <button class="btn-purchase" onclick="goToCheckout()">Comprar Licencia Premium</button>
+                </div>
+                
+                <div class="plan-card" style="opacity: 0.6;">
+                    <h3>Soporte Dedicado <span>Mensual</span></h3>
+                    <div class="plan-price">$9.99 <span>/ mes</span></div>
+                    <button class="btn-purchase" style="cursor: not-allowed;" disabled>Próximamente</button>
                 </div>
             </div>
-        </section>
-    </main>
+        </div>
+    </div>
 
+    <!-- VISTA 2: CHECKOUT (Estilo profesional) -->
+    <div class="checkout-container" id="checkoutView">
+        <!-- Resumen (Izquierda) -->
+        <div class="checkout-left">
+            <div class="summary-title">Resumen del pedido</div>
+            <div class="total-price">USDT 29.99</div>
+            <div style="color: #6c757d; font-size: 0.9rem; margin-bottom: 2rem;">Pago único para el servidor seleccionado</div>
+            
+            <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 2rem;">
+                <div style="background: #343a40; width: 60px; height: 60px; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.5rem;">
+                    <i class="ph ph-ticket"></i>
+                </div>
+                <div>
+                    <div style="font-weight: 600; color: #212529;">Premium - Licencia Servidor</div>
+                    <div style="font-size: 0.85rem; color: #6c757d;">Licencia de por vida</div>
+                </div>
+            </div>
+
+            <div class="summary-item">
+                <span>Subtotal</span>
+                <span>USDT 29.99</span>
+            </div>
+            <div class="summary-item" style="color: #f5b027; cursor: pointer; font-weight: 500;">
+                Añadir código de descuento
+            </div>
+            <div class="summary-item total">
+                <span>Total a pagar hoy</span>
+                <span>USDT 29.99</span>
+            </div>
+        </div>
+
+        <!-- Formulario y Pago (Derecha) -->
+        <div class="checkout-right">
+            <div class="checkout-step">Completar Pago <span style="color:#adb5bd; font-weight:400;">> Verificación</span></div>
+            <p class="checkout-desc">Tenancy utiliza Binance Pay de forma manual para procesar los pagos sin comisiones internacionales.</p>
+            
+            <div class="form-group-checkout">
+                <label>ID del Servidor de Discord (IMPORTANTE) *</label>
+                <input type="text" id="checkoutGuildId" readonly style="background: #e9ecef; color: #495057; cursor: not-allowed;">
+            </div>
+
+            <div class="binance-box">
+                <img src="https://public.bnbstatic.com/image/cms/article/body/202210/1628172922116047125.png" alt="Binance Pay" style="height: 30px; margin-bottom: 1rem;">
+                
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                    <!-- AQUÍ CARGA LA IMAGEN DEL USER -->
+                    <img src="/img/binance.jpg" alt="QR" style="width: 150px; height: 150px; border-radius: 8px; border: 1px solid #dee2e6;">
+                    
+                    <div style="text-align: left; font-size: 0.9rem; color: #495057; width: 100%;">
+                        <div style="margin-bottom: 0.5rem;">1. Abre tu app de Binance y escanea el QR superior.</div>
+                        <div style="margin-bottom: 0.5rem;">2. Alternativa: Envía a Pay ID <strong>1166529573</strong></div>
+                        <div style="color: #dc3545; font-weight: 600;">3. Pega la ID de tu Servidor en la Nota del pago.</div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-continue" onclick="confirmPayment()">Ya he realizado el pago</button>
+            <div style="text-align: center; margin-top: 1rem;">
+                <a href="#" onclick="cancelCheckout()" style="color: #6c757d; font-size: 0.85rem; text-decoration: none;">← Volver a la tienda</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toasts (Alerts) -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        let serversList = [];
+
+        // 1. Cargar servidores del usuario
+        async function fetchServers() {
+            try {
+                const res = await fetch("/api/servers");
+                if (!res.ok) {
+                    if (res.status === 401) window.location.href = "/auth/discord";
+                    return;
+                }
+                const data = await res.json();
+                serversList = [...data.serversWithBot, ...data.serversWithoutBot];
+                
+                const select = document.getElementById("serverSelectStore");
+                select.innerHTML = '<option value="">Selecciona un servidor...</option>';
+                
+                serversList.forEach(s => {
+                    select.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+                });
+
+                select.addEventListener("change", (e) => {
+                    const s = serversList.find(x => x.id === e.target.value);
+                    if (s) {
+                        document.getElementById("serverName").innerText = s.name;
+                        document.getElementById("serverIcon").src = s.icon || 'https://cdn.discordapp.com/embed/avatars/0.png';
+                    } else {
+                        document.getElementById("serverName").innerText = 'Selecciona un servidor';
+                        document.getElementById("serverIcon").src = 'https://cdn.discordapp.com/embed/avatars/0.png';
+                    }
+                });
+
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // 2. Transición a Checkout
+        function goToCheckout() {
+            const serverId = document.getElementById("serverSelectStore").value;
+            if (!serverId) {
+                showToast("Por favor, selecciona un servidor primero.", "error");
+                return;
+            }
+            document.getElementById("storeView").style.display = "none";
+            document.getElementById("checkoutView").style.display = "flex";
+            document.getElementById("checkoutGuildId").value = serverId;
+        }
+
+        // 3. Volver a la tienda
+        function cancelCheckout() {
+            document.getElementById("checkoutView").style.display = "none";
+            document.getElementById("storeView").style.display = "block";
+        }
+
+        // 4. Botón de Confirmar
+        function confirmPayment() {
+            showToast("Verificando pago... Nuestro sistema validará tu pago en un plazo máximo de 24 horas. ¡Gracias por confiar en Tenancy!", "success");
+            setTimeout(() => { window.location.href = "/dashboard.html"; }, 4000);
+        }
+
+        // Sistema de Notificaciones Toast (Reutilizado)
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            const icon = type === 'success' ? 'check-circle' : 'warning-circle';
+            toast.innerHTML = `<i class="ph ph-${icon}" style="font-size: 1.2rem;"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3500);
+        }
+
+        fetchServers();
+    </script>
 </body>
-
 </html>
