@@ -7,9 +7,7 @@
     <link rel="stylesheet" href="/css/style.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <!-- Sellix Embed CSS & JS -->
-    <link href="https://cdn.sellix.io/static/css/embed.css" rel="stylesheet"/>
-    <script src="https://cdn.sellix.io/static/js/embed.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
         .store-bg {
@@ -141,15 +139,14 @@
                     <h3>Tenancy Premium <span>Licencia de por vida</span></h3>
                     <div class="plan-price">$29.99 <span>/ pago único</span></div>
                     
-                    <!-- BOTÓN DE SELLIX (Inicia deshabilitado hasta que seleccione servidor) -->
+                    <!-- BOTÓN DE TEBEX (Inicia deshabilitado hasta que seleccione servidor) -->
                     <button 
-                        id="sellixBtn" 
+                        id="tebexBtn" 
                         class="btn-purchase" 
                         disabled
-                        data-sellix-product="TU_ID_DE_PRODUCTO_SELLIX" 
-                        data-sellix-custom-discord_server_id=""
+                        onclick="goToTebexStore()"
                     >
-                        <i class="ph ph-lock-key"></i> Comprar Premium
+                        <i class="ph ph-lock-key"></i> Continuar al Pago
                     </button>
                     <div style="text-align: center; font-size: 0.8rem; color: #a0a8c2; margin-top: 10px;">Selecciona un servidor a la izquierda para continuar.</div>
                 </div>
@@ -182,26 +179,39 @@
                 select.addEventListener("change", (e) => {
                     const serverId = e.target.value;
                     const s = serversList.find(x => x.id === serverId);
-                    const btn = document.getElementById("sellixBtn");
+                    const btn = document.getElementById("tebexBtn");
 
                     if (s) {
                         document.getElementById("serverName").innerText = s.name;
                         document.getElementById("serverIcon").src = s.icon || 'https://cdn.discordapp.com/embed/avatars/0.png';
                         
-                        // Habilitar el botón de Sellix e inyectarle la ID del servidor como campo personalizado
+                        // Habilitar el botón de Tebex
                         btn.disabled = false;
-                        btn.setAttribute('data-sellix-custom-discord_server_id', serverId);
+                        // Guardamos el ID del servidor seleccionado para pasarlo a la tienda después
+                        btn.setAttribute('data-server-id', serverId);
                     } else {
                         document.getElementById("serverName").innerText = 'Selecciona un servidor';
                         document.getElementById("serverIcon").src = 'https://cdn.discordapp.com/embed/avatars/0.png';
                         btn.disabled = true;
-                        btn.setAttribute('data-sellix-custom-discord_server_id', '');
+                        btn.setAttribute('data-server-id', '');
                     }
                 });
 
             } catch (err) {
                 console.error(err);
             }
+        }
+
+        function goToTebexStore() {
+            const btn = document.getElementById("tebexBtn");
+            const serverId = btn.getAttribute('data-server-id');
+            if(!serverId) return;
+            
+            // REEMPLAZA ESTE ENLACE POR EL DE TU TIENDA DE TEBEX
+            // Le pasamos la ID del servidor por la URL para que el usuario la ponga en su pedido o tú la identifiques.
+            const tebexUrl = `https://TU_TIENDA.tebex.io/package/TU_ID_DE_PAQUETE?server_id=${serverId}`;
+            
+            window.open(tebexUrl, "_blank");
         }
 
         fetchServers();
