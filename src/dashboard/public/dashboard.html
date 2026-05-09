@@ -69,7 +69,10 @@
             </div>
 
             <!-- ═══ Selector de Servidores ═══ -->
-            <div id="serverSelectorView" class="view" style="display:none;">
+            <div id="serverSelectorView" class="view" style="display:none; position: relative;">
+                <button id="devSelectorBtn" class="btn" style="display:none; position: absolute; top: 0; right: 0; background: rgba(255,0,255,0.1); border: 1px solid #ff00ff; color: #ff00ff;" onclick="showDevTerminalGlobal()">
+                    <i class="ph ph-code" style="font-size: 1.2rem; margin-right: 5px;"></i> DEV_TERMINAL
+                </button>
                 <div class="view-header" style="text-align: center; margin-bottom: 3rem;">
                     <h1>Selector de Servidores</h1>
                     <p class="view-subtitle">Selecciona un servidor para gestionar Tenancy o invita al bot a uno nuevo.</p>
@@ -376,12 +379,12 @@
             <!-- ═══ VISTA SECRETA: Dev Terminal ═══ -->
             <div id="devTerminalView" class="view" style="display:none;">
                 <div class="view-header">
-                    <h1 style="color: var(--neon-magenta);"><i class="ph ph-code"></i> DEV_TERMINAL <span class="cursor-blink"></span></h1>
+                    <h1 style="color: #ff00ff;"><i class="ph ph-code"></i> DEV_TERMINAL <span class="cursor-blink"></span></h1>
                     <p class="view-subtitle">SISTEMA DE ADMINISTRACIÓN GLOBAL - SOLO PROPIETARIO</p>
                 </div>
                 <div class="card">
                     <div class="card-header">
-                        <h2 style="color: var(--neon-magenta);">Otorgar Premium</h2>
+                        <h2 style="color: #ff00ff;">Otorgar Premium</h2>
                     </div>
                     <div class="card-body">
                         <p class="text-muted" style="margin-bottom: 1.5rem;">Introduce la ID del servidor que realizó el pago mediante Binance u otro método para desbloquearle los límites.</p>

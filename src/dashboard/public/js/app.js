@@ -28,6 +28,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (user.isDev) {
             const devBtn = document.getElementById("devNavBtn");
             if (devBtn) devBtn.style.display = "flex";
+            const devSelBtn = document.getElementById("devSelectorBtn");
+            if (devSelBtn) devSelBtn.style.display = "inline-flex";
         }
     } catch { return window.location.href = "/"; }
 
@@ -744,4 +746,16 @@ function formatDate(dateStr) {
     if (!dateStr) return "—";
     const d = new Date(dateStr);
     return d.toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+// ═══ Dev Terminal Global ═══
+window.showDevTerminalGlobal = function() {
+    document.getElementById("sidebar").style.display = "flex"; // Show sidebar so dev can navigate back
+    const selector = document.getElementById("serverSelector");
+    if(selector) selector.value = "";
+
+    showView("devTerminalView");
+    document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+    const navItem = document.querySelector(`.nav-item[data-view="devTerminal"]`);
+    if (navItem) navItem.classList.add("active");
 }
