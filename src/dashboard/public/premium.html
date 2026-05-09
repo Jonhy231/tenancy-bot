@@ -237,31 +237,61 @@
 
         <!-- Formulario y Pago (Derecha) -->
         <div class="checkout-right">
-            <div class="checkout-step">Completar Pago <span style="color:#adb5bd; font-weight:400;">> Verificación</span></div>
-            <p class="checkout-desc">Tenancy utiliza Binance Pay de forma manual para procesar los pagos sin comisiones internacionales.</p>
+            <div class="checkout-step">Sus datos <span style="color:#adb5bd; font-weight:400;">> Pago</span></div>
+            <p class="checkout-desc">Recopilamos esta información para que su pago se realice de forma segura y asociarlo a su servidor.</p>
             
             <div class="form-group-checkout">
-                <label>ID del Servidor de Discord (IMPORTANTE) *</label>
+                <label>Dirección de correo electrónico *</label>
+                <input type="email" id="checkoutEmail" placeholder="tu@email.com" required>
+            </div>
+
+            <div class="form-group-checkout">
+                <label>ID del Servidor de Discord *</label>
                 <input type="text" id="checkoutGuildId" readonly style="background: #e9ecef; color: #495057; cursor: not-allowed;">
             </div>
 
-            <div class="binance-box">
-                <img src="https://public.bnbstatic.com/image/cms/article/body/202210/1628172922116047125.png" alt="Binance Pay" style="height: 30px; margin-bottom: 1rem;">
+            <div class="payment-methods" style="margin-top: 2rem;">
+                <label style="display: block; font-size: 0.9rem; font-weight: 600; color: #495057; margin-bottom: 1rem;">Método de pago *</label>
                 
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-                    <!-- AQUÍ CARGA LA IMAGEN DEL USER -->
-                    <img src="/img/binance.jpg" alt="QR" style="width: 150px; height: 150px; border-radius: 8px; border: 1px solid #dee2e6;">
-                    
-                    <div style="text-align: left; font-size: 0.9rem; color: #495057; width: 100%;">
-                        <div style="margin-bottom: 0.5rem;">1. Abre tu app de Binance y escanea el QR superior.</div>
-                        <div style="margin-bottom: 0.5rem;">2. Alternativa: Envía a Pay ID <strong>1166529573</strong></div>
-                        <div style="color: #dc3545; font-weight: 600;">3. Pega la ID de tu Servidor en la Nota del pago.</div>
+                <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                    <div class="pay-method-btn active" id="btnPaypal" onclick="selectPaymentMethod('paypal')" style="flex: 1; border: 2px solid #0070ba; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                        <img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_111x69.jpg" alt="PayPal" style="height: 30px;">
+                    </div>
+                    <div class="pay-method-btn" id="btnBinance" onclick="selectPaymentMethod('binance')" style="flex: 1; border: 1px solid #ced4da; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: all 0.2s; filter: grayscale(100%); opacity: 0.7;">
+                        <img src="https://public.bnbstatic.com/image/cms/article/body/202210/1628172922116047125.png" alt="Binance Pay" style="height: 25px;">
                     </div>
                 </div>
+
+                <!-- PAYPAL SECTION -->
+                <div id="paypalSection" style="display: block; text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+                    <p class="text-muted" style="font-size: 0.9rem; margin-bottom: 1rem;">Serás redirigido a PayPal para completar tu compra de forma segura.</p>
+                    <!-- Aquí iría el botón real de PayPal -->
+                    <div id="paypal-button-container">
+                        <button class="btn-continue" style="background: #ffc439; color: #000; box-shadow: none; font-weight: bold; border-radius: 20px; display: flex; align-items: center; justify-content: center; gap: 10px;" onclick="simulatePaypalPayment()">
+                            <i><img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_111x69.jpg" style="height:20px;"></i> Pagar con PayPal
+                        </button>
+                    </div>
+                </div>
+
+                <!-- BINANCE SECTION -->
+                <div id="binanceSection" style="display: none;">
+                    <div class="binance-box">
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                            <img src="/img/binance.jpg" alt="QR" style="width: 150px; height: 150px; border-radius: 8px; border: 1px solid #dee2e6;">
+                            
+                            <div style="text-align: left; font-size: 0.9rem; color: #495057; width: 100%;">
+                                <div style="margin-bottom: 0.5rem;">1. Abre tu app de Binance y escanea el QR.</div>
+                                <div style="margin-bottom: 0.5rem;">2. O envía a Pay ID <strong>1166529573</strong></div>
+                                <div style="color: #dc3545; font-weight: 600;">3. Nota del pago: Pega la ID de tu Servidor.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-continue" onclick="confirmBinancePayment()">Confirmar Transferencia Binance</button>
+                </div>
+
             </div>
 
-            <button class="btn-continue" onclick="confirmPayment()">Ya he realizado el pago</button>
-            <div style="text-align: center; margin-top: 1rem;">
+            <div style="text-align: center; margin-top: 1.5rem;">
                 <a href="#" onclick="cancelCheckout()" style="color: #6c757d; font-size: 0.85rem; text-decoration: none;">← Volver a la tienda</a>
             </div>
         </div>
@@ -325,10 +355,55 @@
             document.getElementById("storeView").style.display = "block";
         }
 
-        // 4. Botón de Confirmar
-        function confirmPayment() {
-            showToast("Verificando pago... Nuestro sistema validará tu pago en un plazo máximo de 24 horas. ¡Gracias por confiar en Tenancy!", "success");
+        // 4. Lógica de Métodos de Pago
+        function selectPaymentMethod(method) {
+            const btnPaypal = document.getElementById("btnPaypal");
+            const btnBinance = document.getElementById("btnBinance");
+            const secPaypal = document.getElementById("paypalSection");
+            const secBinance = document.getElementById("binanceSection");
+
+            if (method === 'paypal') {
+                btnPaypal.style.border = "2px solid #0070ba";
+                btnPaypal.style.filter = "grayscale(0%)";
+                btnPaypal.style.opacity = "1";
+                
+                btnBinance.style.border = "1px solid #ced4da";
+                btnBinance.style.filter = "grayscale(100%)";
+                btnBinance.style.opacity = "0.7";
+
+                secPaypal.style.display = "block";
+                secBinance.style.display = "none";
+            } else {
+                btnBinance.style.border = "2px solid #f3ba2f";
+                btnBinance.style.filter = "grayscale(0%)";
+                btnBinance.style.opacity = "1";
+                
+                btnPaypal.style.border = "1px solid #ced4da";
+                btnPaypal.style.filter = "grayscale(100%)";
+                btnPaypal.style.opacity = "0.7";
+
+                secBinance.style.display = "block";
+                secPaypal.style.display = "none";
+            }
+        }
+
+        function confirmBinancePayment() {
+            showToast("Procesando verificación de Binance... Un administrador confirmará tu pago en breve.", "success");
             setTimeout(() => { window.location.href = "/dashboard.html"; }, 4000);
+        }
+
+        function simulatePaypalPayment() {
+            const email = document.getElementById("checkoutEmail").value;
+            if(!email) {
+                showToast("Por favor, introduce tu correo electrónico primero.", "error");
+                return;
+            }
+            showToast("Redirigiendo a PayPal Seguro...", "success");
+            // Aquí iría la integración real de PayPal
+            setTimeout(() => { 
+                showToast("Pago de prueba de PayPal procesado con éxito.", "success");
+                setTimeout(() => { window.location.href = "/dashboard.html"; }, 2000);
+            }, 2000);
         }
 
         // Sistema de Notificaciones Toast (Reutilizado)
