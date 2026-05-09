@@ -64,18 +64,29 @@
             <div id="loadingView" class="view active-view">
                 <div class="loading-spinner">
                     <div class="spinner"></div>
-                    <p>Cargando datos del servidor...</p>
+                    <p>Cargando datos...</p>
                 </div>
             </div>
 
-            <!-- ═══ Sin servidores ═══ -->
-            <div id="noServersView" class="view" style="display:none;">
-                <div class="empty-state">
-                    <div class="empty-icon">🤖</div>
-                    <h2>Sin servidores disponibles</h2>
-                    <p>No se encontraron servidores donde tengas permisos y el bot esté presente.</p>
+            <!-- ═══ Selector de Servidores ═══ -->
+            <div id="serverSelectorView" class="view" style="display:none;">
+                <div class="view-header" style="text-align: center; margin-bottom: 3rem;">
+                    <h1>Selector de Servidores</h1>
+                    <p class="view-subtitle">Selecciona un servidor para gestionar Tenancy o invita al bot a uno nuevo.</p>
+                </div>
+                
+                <h2 style="margin-bottom: 1rem; border-bottom: var(--border-glass); padding-bottom: 0.5rem;">Servidores con Tenancy</h2>
+                <div class="server-grid" id="serversWithBotGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 3rem;">
+                    <!-- Llenado por JS -->
+                </div>
+
+                <h2 style="margin-bottom: 1rem; border-bottom: var(--border-glass); padding-bottom: 0.5rem;">Servidores sin Tenancy</h2>
+                <div class="server-grid" id="serversWithoutBotGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;">
+                    <!-- Llenado por JS -->
                 </div>
             </div>
+
+
 
             <!-- ═══ VISTA: Overview ═══ -->
             <div id="overviewView" class="view" style="display:none;">

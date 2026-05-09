@@ -130,49 +130,65 @@ export function startDashboard(client) {
     // API: Servidores
     // ══════════════════════════════════════
 
-    // Listar servidores donde el usuario tiene permisos Y el bot está presente
+    // Listar servidores donde el usuario tiene permisos (con y sin bot)
     app.get("/api/servers", async (req, res) => {
         if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
 
         const userGuilds = req.session.user.guilds || [];
-        const MANAGE_GUILD = 0x20; // Permission bit para Manage Guild
+        const MANAGE_GUILD = 0x20; 
 
         const botGuildIds = userGuilds.filter(g => client.guilds.cache.has(g.id)).map(g => g.id);
         const configs = await Guild.find({ guildId: { $in: botGuildIds }, 'dashboardRoles.0': { $exists: true } }).lean();
 
-        const validServers = [];
+        const serversWithBot = [];
+        const serversWithoutBot = [];
+
         for (const g of userGuilds) {
-            const guildObj = client.guilds.cache.get(g.id);
-            if (!guildObj) continue;
-
             const hasNativePerms = (parseInt(g.permissions) & MANAGE_GUILD) === MANAGE_GUILD || g.owner;
-            if (hasNativePerms) {
-                validServers.push(g);
-                continue;
-            }
+            const guildObj = client.guilds.cache.get(g.id);
 
-            const config = configs.find(c => c.guildId === g.id);
-            if (config && config.dashboardRoles?.length > 0) {
-                try {
-                    const member = await guildObj.members.fetch(req.session.user.id);
-                    if (member && member.roles.cache.some(r => config.dashboardRoles.includes(r.id))) {
-                        validServers.push(g);
+            // Icon formatter
+            const iconUrl = g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : null;
+
+            if (guildObj) {
+                // Bot ESTÁ en el servidor
+                let hasAccess = hasNativePerms;
+                if (!hasAccess) {
+                    const config = configs.find(c => c.guildId === g.id);
+                    if (config && config.dashboardRoles?.length > 0) {
+                        try {
+                            const member = await guildObj.members.fetch(req.session.user.id);
+                            if (member && member.roles.cache.some(r => config.dashboardRoles.includes(r.id))) {
+                                hasAccess = true;
+                            }
+                        } catch(e) {}
                     }
-                } catch(e) {}
+                }
+                
+                if (hasAccess) {
+                    serversWithBot.push({
+                        id: g.id,
+                        name: guildObj.name,
+                        icon: guildObj.iconURL({ size: 128 }) || iconUrl,
+                        memberCount: guildObj.memberCount || 0,
+                        hasBot: true
+                    });
+                }
+            } else {
+                // Bot NO está en el servidor
+                if (hasNativePerms) {
+                    serversWithoutBot.push({
+                        id: g.id,
+                        name: g.name,
+                        icon: iconUrl,
+                        memberCount: 0,
+                        hasBot: false
+                    });
+                }
             }
         }
 
-        const serversWithBot = validServers.map(g => {
-            const guild = client.guilds.cache.get(g.id);
-            return {
-                id: g.id,
-                name: guild?.name || g.name,
-                icon: guild?.iconURL({ size: 128 }) || null,
-                memberCount: guild?.memberCount || 0,
-            };
-        });
-
-        res.json(serversWithBot);
+        res.json({ serversWithBot, serversWithoutBot });
     });
 
     // Obtener detalles de un servidor específico

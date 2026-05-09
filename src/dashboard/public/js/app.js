@@ -44,9 +44,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Evento: cambiar servidor
     document.getElementById("serverSelector").addEventListener("change", (e) => {
-        if (e.target.value) {
-            currentGuildId = e.target.value;
-            loadServerData(currentGuildId);
+        if (!e.target.value) {
+            // Volver al selector de servidores
+            document.getElementById("sidebar").style.display = "none";
+            showView("serverSelectorView");
+        } else {
+            loadServerData(e.target.value);
         }
     });
 
@@ -144,21 +147,44 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function loadServers() {
     try {
         const res = await fetch("/api/servers");
-        const servers = await res.json();
+        const { serversWithBot, serversWithoutBot } = await res.json();
+        
         const selector = document.getElementById("serverSelector");
+        selector.innerHTML = '<option value="">🏠 Selector de Servidores</option>' + 
+            serversWithBot.map(s => `<option value="${s.id}">${s.name}</option>`).join("");
 
-        if (!servers.length) {
-            showView("noServersView");
-            selector.innerHTML = '<option value="">Sin servidores</option>';
-            return;
+        const gridWith = document.getElementById("serversWithBotGrid");
+        const gridWithout = document.getElementById("serversWithoutBotGrid");
+
+        if (serversWithBot.length === 0) {
+            gridWith.innerHTML = '<p class="text-muted">No tienes servidores con Tenancy instalado o no tienes permisos de administrador.</p>';
+        } else {
+            gridWith.innerHTML = serversWithBot.map(s => `
+                <div class="card" style="text-align: center; margin-bottom: 0;">
+                    <img src="${s.icon || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="Icon" style="width: 64px; height: 64px; border-radius: 50%; margin: 1rem auto; display: block;">
+                    <h3>${s.name}</h3>
+                    <p class="text-muted text-sm" style="margin-bottom: 1rem;">${s.memberCount} miembros</p>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="loadServerData('${s.id}')">Gestionar</button>
+                </div>
+            `).join("");
         }
 
-        selector.innerHTML = servers.map(s =>
-            `<option value="${s.id}">${s.name}</option>`
-        ).join("");
+        if (serversWithoutBot.length === 0) {
+            gridWithout.innerHTML = '<p class="text-muted">No tienes servidores pendientes.</p>';
+        } else {
+            gridWithout.innerHTML = serversWithoutBot.map(s => `
+                <div class="card" style="text-align: center; margin-bottom: 0; opacity: 0.8;">
+                    <img src="${s.icon || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="Icon" style="width: 64px; height: 64px; border-radius: 50%; margin: 1rem auto; display: block; filter: grayscale(100%);">
+                    <h3>${s.name}</h3>
+                    <p class="text-muted text-sm" style="margin-bottom: 1rem;">Falta instalar Tenancy</p>
+                    <a href="https://discord.com/oauth2/authorize?client_id=1181289902558675026&permissions=8&scope=bot%20applications.commands&guild_id=${s.id}" target="_blank" class="btn btn-outline" style="width: 100%;">Invitar</a>
+                </div>
+            `).join("");
+        }
 
-        currentGuildId = servers[0].id;
-        await loadServerData(currentGuildId);
+        // Mostrar vista del selector
+        document.getElementById("sidebar").style.display = "none"; // Ocultar sidebar
+        showView("serverSelectorView");
     } catch (err) {
         console.error("Error cargando servidores:", err);
         toast("Error al cargar servidores", "error");
@@ -166,8 +192,14 @@ async function loadServers() {
 }
 
 // ═══ Cargar Datos del Servidor ═══
-async function loadServerData(guildId) {
+window.loadServerData = async function(guildId) {
+    currentGuildId = guildId;
+    document.getElementById("serverSelector").value = guildId;
     showView("loadingView");
+    
+    // Mostrar sidebar ahora que estamos en un servidor
+    document.getElementById("sidebar").style.display = "flex";
+
     try {
         // Cargar todo en paralelo
         const [serverRes, rolesRes, channelsRes] = await Promise.all([
