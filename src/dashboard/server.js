@@ -22,7 +22,7 @@ const __dirname = path.dirname(__filename);
  */
 export function startDashboard(client) {
     const app = express();
-    const PORT = process.env.DASHBOARD_PORT || 3000;
+    const PORT = process.env.PORT || process.env.DASHBOARD_PORT || 3000;
 
     // ═══ Middleware ═══
     app.use(express.json());
