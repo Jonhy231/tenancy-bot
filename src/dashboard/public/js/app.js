@@ -10,6 +10,7 @@ let guildChannels = { textChannels: [], categories: [] };
 // Estado local de selección de roles
 let selectedSupportRoles = [];
 let selectedAdminRoles = [];
+let selectedDashboardRoles = [];
 
 // ═══ Init ═══
 document.addEventListener("DOMContentLoaded", async () => {
@@ -74,6 +75,15 @@ document.addEventListener("DOMContentLoaded", async () => {
             e.target.value = "";
         }
     });
+    const dashboardSelect = document.getElementById("dashboardRoleSelect");
+    if (dashboardSelect) {
+        dashboardSelect.addEventListener("change", (e) => {
+            if (e.target.value) {
+                addRoleTag("dashboard", e.target.value);
+                e.target.value = "";
+            }
+        });
+    }
     document.getElementById("saveRolesBtn").addEventListener("click", saveRolesConfig);
 
     // Eventos: canales
@@ -173,8 +183,18 @@ function populateDashboard(data) {
     // Config: roles — poblar selectores y tags
     selectedSupportRoles = [...(data.config.supportRoles || [])];
     selectedAdminRoles = [...(data.config.adminRoles || [])];
+    selectedDashboardRoles = [...(data.config.dashboardRoles || [])];
     populateRoleSelectors();
     renderRoleTags();
+
+    // Seguridad: Ocultar selectores sensibles si no es admin nativo
+    if (data.guild.isNativeAdmin) {
+        document.getElementById("adminRoleSelect").parentElement.parentElement.style.display = "block";
+        document.getElementById("dashboardRoleGroup").style.display = "block";
+    } else {
+        document.getElementById("adminRoleSelect").parentElement.parentElement.style.display = "none";
+        document.getElementById("dashboardRoleGroup").style.display = "none";
+    }
 
     // Config: canales — poblar selectores
     populateChannelSelectors(data.config);
@@ -202,6 +222,7 @@ function populateDashboard(data) {
 function populateRoleSelectors() {
     const supportSelect = document.getElementById("supportRoleSelect");
     const adminSelect = document.getElementById("adminRoleSelect");
+    const dashboardSelect = document.getElementById("dashboardRoleSelect");
 
     const buildOptions = (excludeIds) => {
         return '<option value="">+ Añadir rol...</option>' +
@@ -213,35 +234,31 @@ function populateRoleSelectors() {
 
     supportSelect.innerHTML = buildOptions(selectedSupportRoles);
     adminSelect.innerHTML = buildOptions(selectedAdminRoles);
+    if (dashboardSelect) dashboardSelect.innerHTML = buildOptions(selectedDashboardRoles);
 }
 
 function renderRoleTags() {
     const supportContainer = document.getElementById("supportRoleTags");
     const adminContainer = document.getElementById("adminRoleTags");
+    const dashboardContainer = document.getElementById("dashboardRoleTags");
 
-    supportContainer.innerHTML = selectedSupportRoles.length
-        ? selectedSupportRoles.map(id => {
-            const role = guildRoles.find(r => r.id === id);
-            const name = role ? role.name : id;
-            const color = role ? role.color : "#5865F2";
-            return `<span class="role-tag" style="border-color:${color}; color:${color}">
-                        ${name}
-                        <button class="tag-remove" onclick="removeRoleTag('support','${id}')">&times;</button>
-                    </span>`;
-        }).join("")
-        : '';
+    const buildTags = (roleIds, type) => {
+        return roleIds.length
+            ? roleIds.map(id => {
+                const role = guildRoles.find(r => r.id === id);
+                const name = role ? role.name : id;
+                const color = role ? role.color : "#5865F2";
+                return `<span class="role-tag" style="border-color:${color}; color:${color}">
+                            ${name}
+                            <button class="tag-remove" onclick="removeRoleTag('${type}','${id}')">&times;</button>
+                        </span>`;
+            }).join("")
+            : '';
+    };
 
-    adminContainer.innerHTML = selectedAdminRoles.length
-        ? selectedAdminRoles.map(id => {
-            const role = guildRoles.find(r => r.id === id);
-            const name = role ? role.name : id;
-            const color = role ? role.color : "#5865F2";
-            return `<span class="role-tag" style="border-color:${color}; color:${color}">
-                        ${name}
-                        <button class="tag-remove" onclick="removeRoleTag('admin','${id}')">&times;</button>
-                    </span>`;
-        }).join("")
-        : '';
+    supportContainer.innerHTML = buildTags(selectedSupportRoles, "support");
+    adminContainer.innerHTML = buildTags(selectedAdminRoles, "admin");
+    if (dashboardContainer) dashboardContainer.innerHTML = buildTags(selectedDashboardRoles, "dashboard");
 }
 
 function addRoleTag(type, roleId) {
@@ -249,6 +266,8 @@ function addRoleTag(type, roleId) {
         selectedSupportRoles.push(roleId);
     } else if (type === "admin" && !selectedAdminRoles.includes(roleId)) {
         selectedAdminRoles.push(roleId);
+    } else if (type === "dashboard" && !selectedDashboardRoles.includes(roleId)) {
+        selectedDashboardRoles.push(roleId);
     }
     renderRoleTags();
     populateRoleSelectors();
@@ -257,8 +276,10 @@ function addRoleTag(type, roleId) {
 window.removeRoleTag = function(type, roleId) {
     if (type === "support") {
         selectedSupportRoles = selectedSupportRoles.filter(id => id !== roleId);
-    } else {
+    } else if (type === "admin") {
         selectedAdminRoles = selectedAdminRoles.filter(id => id !== roleId);
+    } else if (type === "dashboard") {
+        selectedDashboardRoles = selectedDashboardRoles.filter(id => id !== roleId);
     }
     renderRoleTags();
     populateRoleSelectors();
@@ -387,6 +408,7 @@ async function saveRolesConfig() {
             body: JSON.stringify({
                 supportRoles: selectedSupportRoles,
                 adminRoles: selectedAdminRoles,
+                dashboardRoles: selectedDashboardRoles,
             }),
         });
         if (!res.ok) throw new Error();

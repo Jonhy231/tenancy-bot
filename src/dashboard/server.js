@@ -130,29 +130,46 @@ export function startDashboard(client) {
     // ══════════════════════════════════════
 
     // Listar servidores donde el usuario tiene permisos Y el bot está presente
-    app.get("/api/servers", (req, res) => {
+    app.get("/api/servers", async (req, res) => {
         if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
 
         const userGuilds = req.session.user.guilds || [];
         const MANAGE_GUILD = 0x20; // Permission bit para Manage Guild
 
-        const serversWithBot = userGuilds
-            .filter(g => {
-                // El usuario debe tener permisos de admin/manage
-                const hasPerms = (parseInt(g.permissions) & MANAGE_GUILD) === MANAGE_GUILD || g.owner;
-                // El bot debe estar en ese servidor
-                const botInGuild = client.guilds.cache.has(g.id);
-                return hasPerms && botInGuild;
-            })
-            .map(g => {
-                const guild = client.guilds.cache.get(g.id);
-                return {
-                    id: g.id,
-                    name: guild?.name || g.name,
-                    icon: guild?.iconURL({ size: 128 }) || null,
-                    memberCount: guild?.memberCount || 0,
-                };
-            });
+        const botGuildIds = userGuilds.filter(g => client.guilds.cache.has(g.id)).map(g => g.id);
+        const configs = await Guild.find({ guildId: { $in: botGuildIds }, 'dashboardRoles.0': { $exists: true } }).lean();
+
+        const validServers = [];
+        for (const g of userGuilds) {
+            const guildObj = client.guilds.cache.get(g.id);
+            if (!guildObj) continue;
+
+            const hasNativePerms = (parseInt(g.permissions) & MANAGE_GUILD) === MANAGE_GUILD || g.owner;
+            if (hasNativePerms) {
+                validServers.push(g);
+                continue;
+            }
+
+            const config = configs.find(c => c.guildId === g.id);
+            if (config && config.dashboardRoles?.length > 0) {
+                try {
+                    const member = await guildObj.members.fetch(req.session.user.id);
+                    if (member && member.roles.cache.some(r => config.dashboardRoles.includes(r.id))) {
+                        validServers.push(g);
+                    }
+                } catch(e) {}
+            }
+        }
+
+        const serversWithBot = validServers.map(g => {
+            const guild = client.guilds.cache.get(g.id);
+            return {
+                id: g.id,
+                name: guild?.name || g.name,
+                icon: guild?.iconURL({ size: 128 }) || null,
+                memberCount: guild?.memberCount || 0,
+            };
+        });
 
         res.json(serversWithBot);
     });
@@ -164,7 +181,7 @@ export function startDashboard(client) {
         const { guildId } = req.params;
 
         // Verificar permisos
-        if (!hasAccess(req.session.user, guildId)) {
+        if (!(await hasAccess(req.session.user, guildId))) {
             return res.status(403).json({ error: "Sin permisos" });
         }
 
@@ -182,12 +199,18 @@ export function startDashboard(client) {
             .limit(20)
             .lean();
 
+        const MANAGE_GUILD = 0x20;
+        const nativeAccess = req.session.user.guilds?.some(g => {
+            return g.id === guildId && ((parseInt(g.permissions) & MANAGE_GUILD) === MANAGE_GUILD || g.owner);
+        });
+
         res.json({
             guild: {
                 id: guildId,
                 name: guild?.name || config.guildName,
                 icon: guild?.iconURL({ size: 128 }) || null,
                 memberCount: guild?.memberCount || 0,
+                isNativeAdmin: nativeAccess,
             },
             config: {
                 ticketCategoryId: config.ticketCategoryId,
@@ -221,7 +244,7 @@ export function startDashboard(client) {
         if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
 
         const { guildId } = req.params;
-        if (!hasAccess(req.session.user, guildId)) {
+        if (!(await hasAccess(req.session.user, guildId))) {
             return res.status(403).json({ error: "Sin permisos" });
         }
 
@@ -250,7 +273,7 @@ export function startDashboard(client) {
         if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
 
         const { guildId } = req.params;
-        if (!hasAccess(req.session.user, guildId)) {
+        if (!(await hasAccess(req.session.user, guildId))) {
             return res.status(403).json({ error: "Sin permisos" });
         }
 
@@ -291,13 +314,20 @@ export function startDashboard(client) {
         if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
 
         const { guildId } = req.params;
-        if (!hasAccess(req.session.user, guildId)) {
+        if (!(await hasAccess(req.session.user, guildId))) {
             return res.status(403).json({ error: "Sin permisos" });
         }
 
         // Lista blanca de campos editables
+        // Solo administradores nativos pueden modificar roles sensibles
+        const MANAGE_GUILD = 0x20;
+        const nativeAccess = req.session.user.guilds?.some(g => {
+            return g.id === guildId && ((parseInt(g.permissions) & MANAGE_GUILD) === MANAGE_GUILD || g.owner);
+        });
+
         const allowedFields = [
-            "supportRoles", "adminRoles",
+            "supportRoles", 
+            ...(nativeAccess ? ["adminRoles", "dashboardRoles"] : []),
             "ticketCategoryId", "logChannelId", "transcriptChannelId",
             "panelChannelId", "panelEmbed", "ticketGreeting",
         ];
@@ -331,7 +361,7 @@ export function startDashboard(client) {
         if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
 
         const { guildId } = req.params;
-        if (!hasAccess(req.session.user, guildId)) {
+        if (!(await hasAccess(req.session.user, guildId))) {
             return res.status(403).json({ error: "Sin permisos" });
         }
 
@@ -367,7 +397,7 @@ export function startDashboard(client) {
         if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
 
         const { guildId, catId } = req.params;
-        if (!hasAccess(req.session.user, guildId)) {
+        if (!(await hasAccess(req.session.user, guildId))) {
             return res.status(403).json({ error: "Sin permisos" });
         }
 
@@ -388,7 +418,7 @@ export function startDashboard(client) {
         if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
 
         const { guildId } = req.params;
-        if (!hasAccess(req.session.user, guildId)) {
+        if (!(await hasAccess(req.session.user, guildId))) {
             return res.status(403).json({ error: "Sin permisos" });
         }
 
@@ -492,11 +522,27 @@ export function startDashboard(client) {
     });
 
     // ═══ Utilidades ═══
-    function hasAccess(user, guildId) {
+    async function hasAccess(user, guildId) {
         const MANAGE_GUILD = 0x20;
-        return user.guilds?.some(g => {
+        const nativeAccess = user.guilds?.some(g => {
             return g.id === guildId && ((parseInt(g.permissions) & MANAGE_GUILD) === MANAGE_GUILD || g.owner);
         });
+        if (nativeAccess) return true;
+
+        const config = await getGuildConfig(guildId);
+        if (!config || !config.dashboardRoles || config.dashboardRoles.length === 0) return false;
+
+        const guildObj = client.guilds.cache.get(guildId);
+        if (!guildObj) return false;
+
+        try {
+            const member = await guildObj.members.fetch(user.id);
+            if (member && member.roles.cache.some(r => config.dashboardRoles.includes(r.id))) {
+                return true;
+            }
+        } catch(e) {}
+        
+        return false;
     }
 
     // ═══ SPA fallback ═══

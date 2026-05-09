@@ -1,7 +1,8 @@
 import "dotenv/config";
-import { Client, GatewayIntentBits } from "discord.js";
+import { Client, Collection, GatewayIntentBits } from "discord.js";
 import { connectDB } from "../database/connection.js";
 import { setupEvents } from "./events/ready.js";
+import { loadCommands } from "./handlers/commandLoader.js";
 import { startDashboard } from "../dashboard/server.js";
 
 const client = new Client({
@@ -11,17 +12,23 @@ const client = new Client({
     ],
 });
 
+// Colección de comandos slash
+client.commands = new Collection();
+
 async function main() {
     // 1. Conectar a MongoDB
     await connectDB();
 
-    // 2. Configurar eventos (tickets, botones, modales)
+    // 2. Cargar comandos slash
+    await loadCommands(client);
+
+    // 3. Configurar eventos (tickets, botones, modales, slash commands)
     setupEvents(client);
 
-    // 3. Login
+    // 4. Login
     await client.login(process.env.BOT_TOKEN);
 
-    // 4. Iniciar dashboard web (después del login)
+    // 5. Iniciar dashboard web (después del login)
     startDashboard(client);
 }
 

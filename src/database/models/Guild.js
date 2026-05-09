@@ -30,6 +30,7 @@ const guildSchema = new mongoose.Schema({
     // ═══ Roles ═══
     supportRoles: [{ type: String }],                      // Roles que pueden ver/gestionar tickets
     adminRoles: [{ type: String }],                        // Roles con acceso total
+    dashboardRoles: [{ type: String }],                    // Roles con acceso al dashboard web
 
     // ═══ Panel de Tickets ═══
     panelChannelId: { type: String, default: "" },             // Canal donde se envía el panel
