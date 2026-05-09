@@ -1,0 +1,20 @@
+{
+  "name": "tenancy-bot",
+  "version": "2.0.0",
+  "description": "Tenancy — Bot de tickets multi-tenant para Discord con dashboard web premium",
+  "type": "module",
+  "main": "src/bot/index.js",
+  "scripts": {
+    "start": "node src/bot/index.js",
+    "deploy": "node src/bot/deploy-commands.js",
+    "dev": "node src/bot/index.js"
+  },
+  "dependencies": {
+    "discord-html-transcripts": "^3.2.0",
+    "discord.js": "^14.18.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.0",
+    "express-session": "^1.18.1",
+    "mongoose": "^8.9.0"
+  }
+}

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — Tenancy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="dashboard-page">
+
+    <!-- ═══ Topbar ═══ -->
+    <header class="topbar">
+        <div class="topbar-left">
+            <span class="brand-icon">🏢</span>
+            <span class="brand-text">Ten<span class="accent">ancy</span></span>
+        </div>
+        <div class="topbar-center">
+            <select id="serverSelector" class="server-select">
+                <option value="">Cargando servidores...</option>
+            </select>
+        </div>
+        <div class="topbar-right">
+            <div class="user-info" id="userInfo">
+                <img id="userAvatar" class="user-avatar" src="" alt="">
+                <span id="userName" class="user-name"></span>
+            </div>
+            <a href="/auth/logout" class="btn btn-sm btn-outline">Salir</a>
+        </div>
+    </header>
+
+    <!-- ═══ Content ═══ -->
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-view="overview">
+                    <span class="nav-icon">📊</span>
+                    <span>Vista General</span>
+                </a>
+                <a href="#" class="nav-item" data-view="tickets">
+                    <span class="nav-icon">🎫</span>
+                    <span>Tickets</span>
+                </a>
+                <a href="#" class="nav-item" data-view="config">
+                    <span class="nav-icon">⚙️</span>
+                    <span>Configuración</span>
+                </a>
+                <a href="#" class="nav-item" data-view="customize">
+                    <span class="nav-icon">🎨</span>
+                    <span>Personalización</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main -->
+        <main class="main-content" id="mainContent">
+
+            <!-- ═══ Pantalla de carga ═══ -->
+            <div id="loadingView" class="view active-view">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p>Cargando datos del servidor...</p>
+                </div>
+            </div>
+
+            <!-- ═══ Sin servidores ═══ -->
+            <div id="noServersView" class="view" style="display:none;">
+                <div class="empty-state">
+                    <div class="empty-icon">🤖</div>
+                    <h2>Sin servidores disponibles</h2>
+                    <p>No se encontraron servidores donde tengas permisos y el bot esté presente.</p>
+                </div>
+            </div>
+
+            <!-- ═══ VISTA: Overview ═══ -->
+            <div id="overviewView" class="view" style="display:none;">
+                <div class="view-header">
+                    <h1>📊 Vista General</h1>
+                    <p class="view-subtitle" id="serverName">—</p>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card stat-blue">
+                        <div class="stat-value" id="statTotal">0</div>
+                        <div class="stat-label">Total Tickets</div>
+                        <div class="stat-icon">🎫</div>
+                    </div>
+                    <div class="stat-card stat-green">
+                        <div class="stat-value" id="statOpen">0</div>
+                        <div class="stat-label">Tickets Abiertos</div>
+                        <div class="stat-icon">🟢</div>
+                    </div>
+                    <div class="stat-card stat-red">
+                        <div class="stat-value" id="statClosed">0</div>
+                        <div class="stat-label">Tickets Cerrados</div>
+                        <div class="stat-icon">🔴</div>
+                    </div>
+                    <div class="stat-card stat-purple">
+                        <div class="stat-value" id="statCategories">0</div>
+                        <div class="stat-label">Categorías</div>
+                        <div class="stat-icon">📁</div>
+                    </div>
+                </div>
+
+                <!-- Tickets recientes -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>🕐 Tickets Recientes</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Usuario</th>
+                                        <th>Categoría</th>
+                                        <th>Asunto</th>
+                                        <th>Estado</th>
+                                        <th>Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentTicketsTable">
+                                    <tr><td colspan="6" class="text-center text-muted">Sin tickets aún</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══ VISTA: Tickets ═══ -->
+            <div id="ticketsView" class="view" style="display:none;">
+                <div class="view-header">
+                    <h1>🎫 Gestión de Tickets</h1>
+                </div>
+                <div class="tabs">
+                    <button class="tab active" data-tab="open">🟢 Abiertos (<span id="tabOpenCount">0</span>)</button>
+                    <button class="tab" data-tab="closed">🔴 Cerrados (<span id="tabClosedCount">0</span>)</button>
+                    <button class="tab" data-tab="banned">🚫 Baneados (<span id="tabBannedCount">0</span>)</button>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Usuario</th>
+                                        <th>Categoría</th>
+                                        <th>Asunto</th>
+                                        <th>Reclamado</th>
+                                        <th>Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ticketsTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══ VISTA: Configuración ═══ -->
+            <div id="configView" class="view" style="display:none;">
+                <div class="view-header">
+                    <h1>⚙️ Configuración</h1>
+                    <p class="view-subtitle">Gestiona los roles, canales y categorías de tickets desde aquí</p>
+                </div>
+                <div class="config-grid">
+
+                    <!-- ═══ Roles de Staff ═══ -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>👥 Roles de Staff</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="supportRoleSelect">Roles de Soporte</label>
+                                <p class="text-muted text-sm" style="margin-bottom:8px;">Pueden ver y gestionar tickets</p>
+                                <div class="multi-select-wrapper">
+                                    <div class="selected-tags" id="supportRoleTags"></div>
+                                    <select id="supportRoleSelect" class="form-input">
+                                        <option value="">+ Añadir rol de soporte...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="adminRoleSelect">Roles de Admin</label>
+                                <p class="text-muted text-sm" style="margin-bottom:8px;">Acceso total a tickets y configuración</p>
+                                <div class="multi-select-wrapper">
+                                    <div class="selected-tags" id="adminRoleTags"></div>
+                                    <select id="adminRoleSelect" class="form-input">
+                                        <option value="">+ Añadir rol de admin...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" id="saveRolesBtn">💾 Guardar Roles</button>
+                        </div>
+                    </div>
+
+                    <!-- ═══ Canales ═══ -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>📁 Canales</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="ticketCategorySelect">Categoría de Discord para Tickets</label>
+                                <p class="text-muted text-sm" style="margin-bottom:8px;">Los canales de tickets se crearán dentro de esta categoría</p>
+                                <select id="ticketCategorySelect" class="form-input">
+                                    <option value="">Seleccionar categoría...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="logChannelSelect">Canal de Logs</label>
+                                <p class="text-muted text-sm" style="margin-bottom:8px;">Canal donde se envían los logs de tickets cerrados</p>
+                                <select id="logChannelSelect" class="form-input">
+                                    <option value="">Seleccionar canal...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="panelChannelSelect">Canal del Panel</label>
+                                <p class="text-muted text-sm" style="margin-bottom:8px;">Canal donde se enviará/actualizará el panel de tickets</p>
+                                <select id="panelChannelSelect" class="form-input">
+                                    <option value="">Seleccionar canal...</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" id="saveChannelsBtn">💾 Guardar Canales</button>
+                        </div>
+                    </div>
+
+                    <!-- ═══ Categorías de tickets ═══ -->
+                    <div class="card config-full-width">
+                        <div class="card-header">
+                            <h2>🏷️ Categorías de Tickets</h2>
+                            <button class="btn btn-sm btn-primary" id="addCategoryBtn">+ Añadir</button>
+                        </div>
+                        <div class="card-body" id="categoriesList">
+                            <!-- Se llena dinámicamente -->
+                        </div>
+                    </div>
+
+                    <!-- ═══ Enviar Panel ═══ -->
+                    <div class="card config-full-width panel-send-card">
+                        <div class="card-header">
+                            <h2>📋 Panel de Tickets</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="panel-send-info">
+                                <div class="panel-status" id="panelStatus">
+                                    <span class="status-dot status-inactive"></span>
+                                    <span id="panelStatusText">Sin panel enviado</span>
+                                </div>
+                                <p class="text-muted text-sm">Envía o actualiza el panel de tickets en el canal configurado. El panel refleja las categorías y el diseño de la sección de Personalización.</p>
+                            </div>
+                            <div class="panel-send-actions">
+                                <button class="btn btn-panel-send" id="sendPanelBtn">
+                                    <span class="btn-content">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+                                        <span id="sendPanelBtnText">Enviar Panel</span>
+                                    </span>
+                                    <span class="btn-loader" style="display:none;">
+                                        <div class="spinner-sm"></div>
+                                        Enviando...
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ═══ VISTA: Personalización ═══ -->
+            <div id="customizeView" class="view" style="display:none;">
+                <div class="view-header">
+                    <h1>🎨 Personalización del Panel</h1>
+                    <p class="view-subtitle">Configura el aspecto del embed y el mensaje de bienvenida</p>
+                </div>
+                <div class="customize-layout">
+                    <!-- Editor -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Editor del Embed</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="embedTitle">Título</label>
+                                <input type="text" id="embedTitle" class="form-input" placeholder="🎫 Sistema de Tickets">
+                            </div>
+                            <div class="form-group">
+                                <label for="embedDescription">Descripción</label>
+                                <textarea id="embedDescription" class="form-input" rows="3" placeholder="Selecciona una categoría para abrir un ticket."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="embedColor">Color (hex)</label>
+                                <div class="color-input-group">
+                                    <input type="color" id="embedColorPicker" value="#5865F2">
+                                    <input type="text" id="embedColor" class="form-input" placeholder="#5865F2">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="embedImage">URL de Imagen (Imgur, etc.)</label>
+                                <input type="url" id="embedImage" class="form-input" placeholder="https://i.imgur.com/ejemplo.png">
+                            </div>
+                            <div class="form-group">
+                                <label for="embedThumbnail">URL del Thumbnail</label>
+                                <input type="url" id="embedThumbnail" class="form-input" placeholder="https://i.imgur.com/thumbnail.png">
+                            </div>
+                            <div class="form-group">
+                                <label for="embedFooter">Footer</label>
+                                <input type="text" id="embedFooter" class="form-input" placeholder="Sistema de soporte">
+                            </div>
+                            <div class="form-group">
+                                <label for="greetingText">Mensaje de Bienvenida</label>
+                                <textarea id="greetingText" class="form-input" rows="3" placeholder="¡Hola {user}! Gracias por abrir un ticket."></textarea>
+                                <p class="text-muted text-sm">Variables: {user}, {subject}, {category}</p>
+                            </div>
+                            <button class="btn btn-primary" id="saveCustomize">💾 Guardar Cambios</button>
+                        </div>
+                    </div>
+                    <!-- Preview -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Vista Previa</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="embed-preview" id="embedPreview">
+                                <div class="embed-bar" id="embedPreviewBar"></div>
+                                <div class="embed-content">
+                                    <div class="embed-title" id="embedPreviewTitle">🎫 Sistema de Tickets</div>
+                                    <div class="embed-desc" id="embedPreviewDesc">Selecciona una categoría...</div>
+                                    <img id="embedPreviewImage" class="embed-img" src="" alt="" style="display:none;">
+                                    <div class="embed-footer" id="embedPreviewFooter">Sistema de soporte</div>
+                                </div>
+                                <img id="embedPreviewThumb" class="embed-thumb" src="" alt="" style="display:none;">
+                            </div>
+                            <!-- Select menu preview -->
+                            <div class="select-preview" id="selectMenuPreview">
+                                <div class="select-preview-box">
+                                    <span class="select-preview-placeholder">📂 Selecciona una categoría...</span>
+                                    <span class="select-preview-arrow">▾</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ═══ Modal: Añadir Categoría ═══ -->
+    <div class="modal-overlay" id="categoryModal" style="display:none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>🏷️ Nueva Categoría</h3>
+                <button class="modal-close" id="closeCategoryModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="catName">Nombre</label>
+                    <input type="text" id="catName" class="form-input" placeholder="Ej: Soporte General" required>
+                </div>
+                <div class="form-group">
+                    <label for="catEmoji">Emoji</label>
+                    <input type="text" id="catEmoji" class="form-input" placeholder="🎮" maxlength="4">
+                </div>
+                <div class="form-group">
+                    <label for="catDesc">Descripción</label>
+                    <input type="text" id="catDesc" class="form-input" placeholder="Ayuda con juegos">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancelCategory">Cancelar</button>
+                <button class="btn btn-primary" id="saveCategory">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ Notificación Toast ═══ -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>
