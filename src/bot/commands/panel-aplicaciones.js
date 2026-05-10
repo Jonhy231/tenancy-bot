@@ -21,18 +21,29 @@ export async function execute(interaction) {
             .setTitle("📋 Sistema de Aplicaciones")
             .setDescription("Selecciona el puesto al que deseas aplicar pulsando el botón correspondiente. Rellena el formulario con sinceridad.");
 
-        const row = new ActionRowBuilder();
+        const validApplications = guildConfig.applications.filter(app => app?.id && app?.name);
+        if (validApplications.length > 25) {
+            return interaction.reply({
+                content: "❌ Hay demasiados formularios configurados. Discord solo permite 25 botones por mensaje.",
+                flags: [MessageFlags.Ephemeral]
+            });
+        }
 
-        guildConfig.applications.forEach(app => {
-            row.addComponents(
-                new ButtonBuilder()
-                    .setCustomId(`app_start_${app.id}`)
-                    .setLabel(`Aplicar a ${app.name}`)
-                    .setStyle(ButtonStyle.Primary)
-            );
-        });
+        const rows = [];
+        for (let i = 0; i < validApplications.length; i += 5) {
+            const row = new ActionRowBuilder();
+            validApplications.slice(i, i + 5).forEach(app => {
+                row.addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`app_start_${app.id}`)
+                        .setLabel(`Aplicar a ${app.name}`.slice(0, 80))
+                        .setStyle(ButtonStyle.Primary)
+                );
+            });
+            rows.push(row);
+        }
 
-        await interaction.channel.send({ embeds: [embed], components: [row] });
+        await interaction.channel.send({ embeds: [embed], components: rows });
 
         await interaction.reply({
             content: "✅ Panel de aplicaciones enviado.",

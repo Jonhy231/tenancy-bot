@@ -59,9 +59,11 @@ const guildSchema = new mongoose.Schema({
 
     // ═══ Sistema de Aplicaciones ═══
     applicationsChannelId: { type: String, default: "" },
+    applicationsPanelChannelId: { type: String, default: "" },
+    applicationsPanelMessageId: { type: String, default: "" },
     applications: [{
-        id: { type: String },
-        name: { type: String },
+        id: { type: String, default: "" },
+        name: { type: String, default: "" },
         questions: [{ type: String }], // Hasta 5 preguntas
         roleToGive: { type: String, default: "" }
     }],

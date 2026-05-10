@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tenancy — El Sistema de Soporte Definitivo</title>
+    <title data-i18n="landing_page_title">Tenancy — El Sistema de Soporte Definitivo</title>
     <meta name="description" content="Tenancy Multi-tenant system.">
     <link rel="stylesheet" href="/css/style.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -15,25 +15,29 @@
             <span class="brand-text" style="font-size: 1.5rem;">Ten<span class="accent">ancy</span></span>
         </div>
         <div style="display: flex; gap: 1.5rem; align-items: center;">
-            <a href="/contact.html" style="color: var(--text-main); font-weight: 500;">Contacto</a>
-            <a href="#docs" style="color: var(--text-main); font-weight: 500;">Docs</a>
-            <a href="https://discord.com/oauth2/authorize?client_id=1181289902558675026&permissions=8&scope=bot%20applications.commands" target="_blank" style="color: var(--text-main); font-weight: 500;">Invitar Bot</a>
-            <a href="/auth/discord" class="btn btn-primary btn-sm">Panel Web</a>
+            <select id="siteLanguageSelect" class="form-input" style="width: auto; padding: 0.3rem 0.5rem; height: auto; border-radius: 4px; border: 1px solid var(--border-glass); background: rgba(0,0,0,0.5); color: #fff;">
+                <option value="es">🇪🇸 ES</option>
+                <option value="en">🇺🇸 EN</option>
+            </select>
+            <a href="/contact.html" style="color: var(--text-main); font-weight: 500;" data-i18n="nav_contact">Contacto</a>
+            <a href="#docs" style="color: var(--text-main); font-weight: 500;" data-i18n="nav_docs">Docs</a>
+            <a href="https://discord.com/oauth2/authorize?client_id=1181289902558675026&permissions=8&scope=bot%20applications.commands" target="_blank" style="color: var(--text-main); font-weight: 500;" data-i18n="nav_invite">Invitar Bot</a>
+            <a href="/auth/discord" class="btn btn-primary btn-sm" data-i18n="nav_panel">Panel Web</a>
         </div>
     </nav>
 
     <main class="terminal-wrapper" style="max-width: 800px; text-align: center; margin-top: 100px;">
-        <h1 style="font-size: 4rem; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; background: linear-gradient(135deg, #fff 0%, #a5a5a5 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Tenancy Bot</h1>
-        <p style="font-size: 1.25rem; color: var(--text-muted); margin-bottom: 3rem; line-height: 1.6; max-width: 600px; margin-left: auto; margin-right: auto;">
+        <h1 style="font-size: 4rem; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; background: linear-gradient(135deg, #fff 0%, #a5a5a5 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;" data-i18n="landing_hero_title">Tenancy Bot</h1>
+        <p style="font-size: 1.25rem; color: var(--text-muted); margin-bottom: 3rem; line-height: 1.6; max-width: 600px; margin-left: auto; margin-right: auto;" data-i18n="hero_desc">
             Tu solución definitiva para la gestión de tickets. Tenancy facilita el soporte de tu servidor con un panel web intuitivo, personalización avanzada y constantes actualizaciones para mejorar la experiencia de tu comunidad.
         </p>
         
         <div style="display: flex; gap: 1rem; justify-content: center; align-items: center;">
             <a href="/auth/discord" class="btn btn-primary btn-lg" style="font-size: 1.1rem; padding: 16px 32px; border-radius: 30px;">
-                <i class="ph ph-discord-logo" style="font-size: 1.5rem;"></i> Acceder al Panel
+                <i class="ph ph-discord-logo" style="font-size: 1.5rem;"></i> <span data-i18n="btn_access_panel">Acceder al Panel</span>
             </a>
             <a href="https://discord.com/oauth2/authorize?client_id=1181289902558675026&permissions=8&scope=bot%20applications.commands" target="_blank" class="btn btn-outline btn-lg" style="font-size: 1.1rem; padding: 16px 32px; border-radius: 30px;">
-                <i class="ph ph-rocket" style="font-size: 1.5rem;"></i> Invitar Bot
+                <i class="ph ph-rocket" style="font-size: 1.5rem;"></i> <span data-i18n="btn_invite_bot">Invitar Bot</span>
             </a>
         </div>
 
@@ -54,28 +58,29 @@
     <!-- ═══ SECCIÓN DOCS ═══ -->
     <section id="docs" style="width: 100%; max-width: 1000px; padding: 4rem 2rem; margin: 0 auto; margin-bottom: 4rem;">
         <div class="view-header" style="text-align: center; margin-bottom: 3rem;">
-            <h2 style="font-size: 2.5rem;">Documentación Rápida</h2>
-            <p class="view-subtitle">Aprende a configurar Tenancy en 3 pasos.</p>
+            <h2 style="font-size: 2.5rem;" data-i18n="landing_docs_title">Documentación Rápida</h2>
+            <p class="view-subtitle" data-i18n="landing_docs_subtitle">Aprende a configurar Tenancy en 3 pasos.</p>
         </div>
         <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
             <div class="stat-card">
-                <h3 style="margin-bottom: 1rem;"><span style="color: var(--accent-blue);">1.</span> Invita al bot</h3>
-                <p class="text-muted" style="font-size: 0.9rem;">Agrega el bot a tu servidor y dale permisos de Administrador para que pueda crear canales de tickets libremente.</p>
+                <h3 style="margin-bottom: 1rem;"><span style="color: var(--accent-blue);">1.</span> <span data-i18n="landing_step1_title">Invita al bot</span></h3>
+                <p class="text-muted" style="font-size: 0.9rem;" data-i18n="landing_step1_desc">Agrega el bot a tu servidor y dale permisos de Administrador para que pueda crear canales de tickets libremente.</p>
             </div>
             <div class="stat-card">
-                <h3 style="margin-bottom: 1rem;"><span style="color: var(--accent-purple);">2.</span> Roles y Canales</h3>
-                <p class="text-muted" style="font-size: 0.9rem;">Entra al Panel Web y ve a Configuración. Asigna qué roles pueden atender tickets y dónde se crearán los logs.</p>
+                <h3 style="margin-bottom: 1rem;"><span style="color: var(--accent-purple);">2.</span> <span data-i18n="landing_step2_title">Roles y Canales</span></h3>
+                <p class="text-muted" style="font-size: 0.9rem;" data-i18n="landing_step2_desc">Entra al Panel Web y ve a Configuración. Asigna qué roles pueden atender tickets y dónde se crearán los logs.</p>
             </div>
             <div class="stat-card">
-                <h3 style="margin-bottom: 1rem;"><span style="color: var(--accent-green);">3.</span> Envía el Panel</h3>
-                <p class="text-muted" style="font-size: 0.9rem;">Crea tus categorías y desde el panel web envía el Embed a tu canal de soporte. ¡Tus usuarios ya pueden abrir tickets!</p>
+                <h3 style="margin-bottom: 1rem;"><span style="color: var(--accent-green);">3.</span> <span data-i18n="landing_step3_title">Envía el Panel</span></h3>
+                <p class="text-muted" style="font-size: 0.9rem;" data-i18n="landing_step3_desc">Crea tus categorías y desde el panel web envía el Embed a tu canal de soporte. ¡Tus usuarios ya pueden abrir tickets!</p>
             </div>
         </div>
     </section>
 
-    <footer style="text-align: center; padding: 2rem; border-top: var(--border-glass); color: var(--text-muted); font-size: 0.9rem;">
+    <footer style="text-align: center; padding: 2rem; border-top: var(--border-glass); color: var(--text-muted); font-size: 0.9rem;" data-i18n="landing_footer">
         Tenancy Bot &copy; 2026. Todos los derechos reservados.
     </footer>
 
+    <script src="/js/i18n-web.js"></script>
 </body>
 </html>

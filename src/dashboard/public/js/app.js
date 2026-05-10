@@ -6,11 +6,31 @@ let currentGuildId = null;
 let serverData = null;
 let guildRoles = [];
 let guildChannels = { textChannels: [], categories: [] };
+let serversCache = { serversWithBot: [], serversWithoutBot: [] };
+const webI18n = window.TenancyWebI18n || null;
 
 // Estado local de selección de roles
 let selectedSupportRoles = [];
 let selectedAdminRoles = [];
 let selectedDashboardRoles = [];
+
+function tWeb(key, fallback, variables = {}) {
+    if (webI18n && typeof webI18n.t === "function") {
+        return webI18n.t(key, variables, fallback);
+    }
+
+    let text = fallback || key;
+    for (const [name, value] of Object.entries(variables)) {
+        text = text.replace(new RegExp(`\\{${name}\\}`, "g"), String(value));
+    }
+    return text;
+}
+
+function applyWebTranslations() {
+    if (webI18n && typeof webI18n.applyTranslations === "function") {
+        webI18n.applyTranslations();
+    }
+}
 
 // ═══ Init ═══
 document.addEventListener("DOMContentLoaded", async () => {
@@ -47,6 +67,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Evento: cambiar servidor
     document.getElementById("serverSelector").addEventListener("change", (e) => {
         if (!e.target.value) {
+            currentGuildId = null;
+            serverData = null;
             // Volver al selector de servidores
             document.getElementById("sidebar").style.display = "none";
             showView("serverSelectorView");
@@ -164,46 +186,35 @@ document.addEventListener("DOMContentLoaded", async () => {
     const saveAppChannelBtn = document.getElementById("saveAppChannelBtn");
     if (saveAppChannelBtn) saveAppChannelBtn.addEventListener("click", saveAppChannelConfig);
 
+    const sendAppPanelBtn = document.getElementById("sendAppPanelBtn");
+    if (sendAppPanelBtn) sendAppPanelBtn.addEventListener("click", sendAppPanel);
+
+    document.addEventListener("tenancy:language-changed", () => {
+        renderServerSelector();
+        if (serverData) {
+            populateRoleSelectors();
+            populateChannelSelectors(serverData.config);
+            renderRecentTickets(serverData.recentTickets);
+            renderTicketTable(document.querySelector(".tab.active")?.dataset.tab || "open");
+            renderCategories(serverData.config.categories);
+            renderApplications(serverData.config.applications);
+            updatePanelStatus(serverData.config);
+            updatePreview();
+            const premiumNotice = document.getElementById("premiumNotice");
+            if (premiumNotice) {
+                premiumNotice.innerHTML = `<p style="color: var(--neon-cyan); margin-bottom: 0;">${tWeb("dashboard_premium_notice", "🔒 Actualiza a Premium para personalizar colores, eliminar la marca de agua y tener categorias infinitas. Paga con Binance Pay.")}</p>`;
+            }
+        }
+    });
+
 });
 
 // ═══ Cargar Servidores ═══
 async function loadServers() {
     try {
         const res = await fetch("/api/servers");
-        const { serversWithBot, serversWithoutBot } = await res.json();
-        
-        const selector = document.getElementById("serverSelector");
-        selector.innerHTML = '<option value="">🏠 Selector de Servidores</option>' + 
-            serversWithBot.map(s => `<option value="${s.id}">${s.name}</option>`).join("");
-
-        const gridWith = document.getElementById("serversWithBotGrid");
-        const gridWithout = document.getElementById("serversWithoutBotGrid");
-
-        if (serversWithBot.length === 0) {
-            gridWith.innerHTML = '<p class="text-muted">No tienes servidores con Tenancy instalado o no tienes permisos de administrador.</p>';
-        } else {
-            gridWith.innerHTML = serversWithBot.map(s => `
-                <div class="card" style="text-align: center; margin-bottom: 0;">
-                    <img src="${s.icon || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="Icon" style="width: 64px; height: 64px; border-radius: 50%; margin: 1rem auto; display: block;">
-                    <h3>${s.name}</h3>
-                    <p class="text-muted text-sm" style="margin-bottom: 1rem;">${s.memberCount} miembros</p>
-                    <button class="btn btn-primary" style="width: 100%;" onclick="loadServerData('${s.id}')">Gestionar</button>
-                </div>
-            `).join("");
-        }
-
-        if (serversWithoutBot.length === 0) {
-            gridWithout.innerHTML = '<p class="text-muted">No tienes servidores pendientes.</p>';
-        } else {
-            gridWithout.innerHTML = serversWithoutBot.map(s => `
-                <div class="card" style="text-align: center; margin-bottom: 0; opacity: 0.8;">
-                    <img src="${s.icon || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="Icon" style="width: 64px; height: 64px; border-radius: 50%; margin: 1rem auto; display: block; filter: grayscale(100%);">
-                    <h3>${s.name}</h3>
-                    <p class="text-muted text-sm" style="margin-bottom: 1rem;">Falta instalar Tenancy</p>
-                    <a href="https://discord.com/oauth2/authorize?client_id=1181289902558675026&permissions=8&scope=bot%20applications.commands&guild_id=${s.id}" target="_blank" class="btn btn-outline" style="width: 100%;">Invitar</a>
-                </div>
-            `).join("");
-        }
+        serversCache = await res.json();
+        renderServerSelector();
 
         // Mostrar vista del selector
         document.getElementById("sidebar").style.display = "none"; // Ocultar sidebar
@@ -211,6 +222,48 @@ async function loadServers() {
     } catch (err) {
         console.error("Error cargando servidores:", err);
         toast("Error al cargar servidores", "error");
+    }
+}
+
+function renderServerSelector() {
+    const { serversWithBot = [], serversWithoutBot = [] } = serversCache;
+    const selector = document.getElementById("serverSelector");
+    if (selector) {
+        selector.innerHTML = `<option value="">${tWeb("dashboard_server_selector_option", "🏠 Selector de Servidores")}</option>` +
+            serversWithBot.map(s => `<option value="${s.id}">${s.name}</option>`).join("");
+        if (currentGuildId) {
+            selector.value = currentGuildId;
+        }
+    }
+
+    const gridWith = document.getElementById("serversWithBotGrid");
+    const gridWithout = document.getElementById("serversWithoutBotGrid");
+    if (!gridWith || !gridWithout) return;
+
+    if (serversWithBot.length === 0) {
+        gridWith.innerHTML = `<p class="text-muted">${tWeb("dashboard_servers_with_bot_empty", "No tienes servidores con Tenancy instalado o no tienes permisos de administrador.")}</p>`;
+    } else {
+        gridWith.innerHTML = serversWithBot.map(s => `
+                <div class="card" style="text-align: center; margin-bottom: 0;">
+                    <img src="${s.icon || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="Icon" style="width: 64px; height: 64px; border-radius: 50%; margin: 1rem auto; display: block;">
+                    <h3>${s.name}</h3>
+                    <p class="text-muted text-sm" style="margin-bottom: 1rem;">${s.memberCount} ${tWeb("dashboard_members_label", "miembros")}</p>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="loadServerData('${s.id}')">${tWeb("dashboard_manage_btn", "Gestionar")}</button>
+                </div>
+            `).join("");
+    }
+
+    if (serversWithoutBot.length === 0) {
+        gridWithout.innerHTML = `<p class="text-muted">${tWeb("dashboard_servers_without_bot_empty", "No tienes servidores pendientes.")}</p>`;
+    } else {
+        gridWithout.innerHTML = serversWithoutBot.map(s => `
+                <div class="card" style="text-align: center; margin-bottom: 0; opacity: 0.8;">
+                    <img src="${s.icon || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="Icon" style="width: 64px; height: 64px; border-radius: 50%; margin: 1rem auto; display: block; filter: grayscale(100%);">
+                    <h3>${s.name}</h3>
+                    <p class="text-muted text-sm" style="margin-bottom: 1rem;">${tWeb("dashboard_missing_install", "Falta instalar Tenancy")}</p>
+                    <a href="https://discord.com/oauth2/authorize?client_id=1181289902558675026&permissions=8&scope=bot%20applications.commands&guild_id=${s.id}" target="_blank" class="btn btn-outline" style="width: 100%;">${tWeb("dashboard_invite_btn", "Invitar")}</a>
+                </div>
+            `).join("");
     }
 }
 
@@ -314,7 +367,7 @@ function populateDashboard(data) {
             notice.className = "card-body";
             notice.style.background = "rgba(0, 255, 255, 0.1)";
             notice.style.borderBottom = "1px solid var(--neon-cyan)";
-            notice.innerHTML = `<p style="color: var(--neon-cyan); margin-bottom: 0;">🔒 <b>Actualiza a Premium</b> para personalizar colores, eliminar la marca de agua y tener categorías infinitas. Paga con Binance Pay.</p>`;
+            notice.innerHTML = `<p style="color: var(--neon-cyan); margin-bottom: 0;">${tWeb("dashboard_premium_notice", "🔒 Actualiza a Premium para personalizar colores, eliminar la marca de agua y tener categorias infinitas. Paga con Binance Pay.")}</p>`;
             document.getElementById("embedTitle").parentElement.parentElement.prepend(notice);
         }
     } else {
@@ -326,6 +379,7 @@ function populateDashboard(data) {
     }
     
     updatePreview();
+    applyWebTranslations();
 }
 
 // ══════════════════════════════════════════
@@ -338,7 +392,7 @@ function populateRoleSelectors() {
     const dashboardSelect = document.getElementById("dashboardRoleSelect");
 
     const buildOptions = (excludeIds) => {
-        return '<option value="">+ Añadir rol...</option>' +
+        return `<option value="">${tWeb("dashboard_add_role_generic", "+ Añadir rol...")}</option>` +
             guildRoles
                 .filter(r => !excludeIds.includes(r.id))
                 .map(r => `<option value="${r.id}" style="color:${r.color}">${r.name}</option>`)
@@ -408,7 +462,7 @@ function populateChannelSelectors(config) {
     const panelSelect = document.getElementById("panelChannelSelect");
 
     // Categorías de Discord (para organizar canales de tickets)
-    catSelect.innerHTML = '<option value="">Sin categoría</option>' +
+    catSelect.innerHTML = `<option value="">${tWeb("dashboard_no_category_option", "Sin categoría")}</option>` +
         guildChannels.categories.map(c =>
             `<option value="${c.id}" ${config.ticketCategoryId === c.id ? "selected" : ""}># ${c.name}</option>`
         ).join("");
@@ -419,28 +473,34 @@ function populateChannelSelectors(config) {
         return { id: c.id, label: `${prefix}# ${c.name}` };
     });
 
-    logSelect.innerHTML = '<option value="">Sin canal de logs</option>' +
+    logSelect.innerHTML = `<option value="">${tWeb("dashboard_no_log_channel_option", "Sin canal de logs")}</option>` +
         textOptions.map(c =>
             `<option value="${c.id}" ${config.logChannelId === c.id ? "selected" : ""}>${c.label}</option>`
         ).join("");
 
-    panelSelect.innerHTML = '<option value="">Seleccionar canal...</option>' +
+    panelSelect.innerHTML = `<option value="">${tWeb("dashboard_select_channel_option", "Seleccionar canal...")}</option>` +
         textOptions.map(c =>
             `<option value="${c.id}" ${config.panelChannelId === c.id ? "selected" : ""}>${c.label}</option>`
         ).join("");
         
     const appSelect = document.getElementById("appChannelSelect");
     if (appSelect) {
-        appSelect.innerHTML = '<option value="">Seleccionar canal...</option>' +
+        appSelect.innerHTML = `<option value="">${tWeb("dashboard_select_channel_option", "Seleccionar canal...")}</option>` +
             textOptions.map(c =>
                 `<option value="${c.id}" ${config.applicationsChannelId === c.id ? "selected" : ""}>${c.label}</option>`
             ).join("");
+    }
+
+    const appPanelTargetSelect = document.getElementById("appPanelTargetSelect");
+    if (appPanelTargetSelect) {
+        appPanelTargetSelect.innerHTML = `<option value="">${tWeb("dashboard_select_channel_option", "Seleccionar canal...")}</option>` +
+            textOptions.map(c => `<option value="${c.id}" ${config.applicationsPanelChannelId === c.id ? "selected" : ""}>${c.label}</option>`).join("");
     }
     
     // Poblar roles para aplicaciones
     const appRoleSelect = document.getElementById("appRoleToGive");
     if (appRoleSelect) {
-        appRoleSelect.innerHTML = '<option value="">Ninguno</option>' +
+        appRoleSelect.innerHTML = `<option value="">${tWeb("dashboard_app_role_none", "Ninguno")}</option>` +
             guildRoles.map(r => `<option value="${r.id}" style="color:${r.color}">${r.name}</option>`).join("");
     }
 }
@@ -458,12 +518,12 @@ function updatePanelStatus(config) {
         statusDot.className = "status-dot status-active";
         const channel = guildChannels.textChannels.find(c => c.id === config.panelChannelId);
         const channelName = channel ? `#${channel.name}` : config.panelChannelId;
-        statusText.textContent = `Panel activo en ${channelName}`;
-        btnText.textContent = "Actualizar Panel";
+        statusText.textContent = tWeb("dashboard_panel_status_active", "Panel activo en {channelName}", { channelName });
+        btnText.textContent = tWeb("dashboard_panel_update_btn", "Actualizar Panel");
     } else {
         statusDot.className = "status-dot status-inactive";
-        statusText.textContent = "Sin panel enviado";
-        btnText.textContent = "Enviar Panel";
+        statusText.textContent = tWeb("dashboard_panel_status_inactive", "Sin panel enviado");
+        btnText.textContent = tWeb("dashboard_panel_send_btn", "Enviar Panel");
     }
 }
 
@@ -527,7 +587,7 @@ async function sendPanel() {
 async function saveGeneralConfig() {
     const btn = document.getElementById("saveGeneralBtn");
     btn.disabled = true;
-    btn.textContent = "Guardando...";
+    btn.textContent = tWeb("saving_generic", "Guardando...");
 
     try {
         const res = await fetch(`/api/server/${currentGuildId}/config`, {
@@ -543,7 +603,7 @@ async function saveGeneralConfig() {
         toast("Error al guardar opciones generales", "error");
     } finally {
         btn.disabled = false;
-        btn.textContent = "💾 Guardar General";
+        btn.textContent = tWeb("btn_save_general", "💾 Guardar General");
     }
 }
 
@@ -554,7 +614,7 @@ async function saveGeneralConfig() {
 async function saveRolesConfig() {
     const btn = document.getElementById("saveRolesBtn");
     btn.disabled = true;
-    btn.textContent = "Guardando...";
+    btn.textContent = tWeb("saving_generic", "Guardando...");
 
     try {
         const res = await fetch(`/api/server/${currentGuildId}/config`, {
@@ -572,7 +632,7 @@ async function saveRolesConfig() {
         toast("Error al guardar roles", "error");
     } finally {
         btn.disabled = false;
-        btn.textContent = "💾 Guardar Roles";
+        btn.textContent = tWeb("btn_save_roles", "💾 Guardar Roles");
     }
 }
 
@@ -583,7 +643,7 @@ async function saveRolesConfig() {
 async function saveChannelsConfig() {
     const btn = document.getElementById("saveChannelsBtn");
     btn.disabled = true;
-    btn.textContent = "Guardando...";
+    btn.textContent = tWeb("saving_generic", "Guardando...");
 
     try {
         const res = await fetch(`/api/server/${currentGuildId}/config`, {
@@ -601,7 +661,7 @@ async function saveChannelsConfig() {
         toast("Error al guardar canales", "error");
     } finally {
         btn.disabled = false;
-        btn.textContent = "💾 Guardar Canales";
+        btn.textContent = tWeb("btn_save_channels", "💾 Guardar Canales");
     }
 }
 
@@ -609,7 +669,7 @@ async function saveChannelsConfig() {
 function renderRecentTickets(tickets) {
     const tbody = document.getElementById("recentTicketsTable");
     if (!tickets || !tickets.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Sin tickets aún</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">${tWeb("dashboard_no_tickets_yet", "Sin tickets aún")}</td></tr>`;
         return;
     }
     tbody.innerHTML = tickets.slice(0, 10).map(t => `
@@ -618,7 +678,7 @@ function renderRecentTickets(tickets) {
             <td>${t.userName || t.userId}</td>
             <td>${t.categoryName}</td>
             <td>${truncate(t.subject, 40)}</td>
-            <td><span class="badge badge-${t.status}">${t.status === "open" ? "Abierto" : "Cerrado"}</span></td>
+            <td><span class="badge badge-${t.status}">${t.status === "open" ? tWeb("status_open", "Abierto") : tWeb("status_closed", "Cerrado")}</span></td>
             <td>${formatDate(t.createdAt)}</td>
         </tr>
     `).join("");
@@ -633,13 +693,13 @@ function renderTicketTable(filter) {
         const banned = serverData.config.bannedUsers || [];
         tbody.innerHTML = banned.length
             ? banned.map(u => `<tr><td colspan="6">${u}</td></tr>`).join("")
-            : '<tr><td colspan="6" class="text-center text-muted">Sin usuarios baneados</td></tr>';
+            : `<tr><td colspan="6" class="text-center text-muted">${tWeb("dashboard_no_banned_users", "Sin usuarios baneados")}</td></tr>`;
         return;
     }
 
     const tickets = (serverData.recentTickets || []).filter(t => t.status === filter);
     if (!tickets.length) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Sin tickets ${filter === "open" ? "abiertos" : "cerrados"}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">${filter === "open" ? tWeb("dashboard_no_open_tickets", "Sin tickets abiertos") : tWeb("dashboard_no_closed_tickets", "Sin tickets cerrados")}</td></tr>`;
         return;
     }
     tbody.innerHTML = tickets.map(t => `
@@ -658,7 +718,7 @@ function renderTicketTable(filter) {
 function renderCategories(categories) {
     const container = document.getElementById("categoriesList");
     if (!categories || !categories.length) {
-        container.innerHTML = '<p class="text-muted">Sin categorías. Usa el botón + para añadir.</p>';
+        container.innerHTML = `<p class="text-muted">${tWeb("dashboard_no_categories", "Sin categorías. Usa el botón + para añadir.")}</p>`;
         return;
     }
     container.innerHTML = categories.map(c => `
@@ -678,7 +738,7 @@ function renderCategories(categories) {
 // ═══ Guardar Categoría ═══
 async function saveCategory() {
     const name = document.getElementById("catName").value.trim();
-    if (!name) return toast("El nombre es obligatorio", "error");
+    if (!name) return toast(tWeb("validation_name_required", "El nombre es obligatorio"), "error");
 
     try {
         const res = await fetch(`/api/server/${currentGuildId}/categories`, {
@@ -716,22 +776,35 @@ function renderApplications(applications) {
     const container = document.getElementById("applicationsList");
     if (!container) return;
     if (!applications || !applications.length) {
-        container.innerHTML = '<p class="text-muted">No hay formularios creados. Usa el botón + para añadir uno.</p>';
+        container.innerHTML = `<p class="text-muted">${tWeb("dashboard_no_applications", "No hay formularios creados. Usa el botón + para añadir uno.")}</p>`;
         return;
     }
-    container.innerHTML = applications.map(a => `
+
+    const validApplications = applications.filter(a => a && (a.name || a.id));
+    if (!validApplications.length) {
+        container.innerHTML = `<p class="text-muted">${tWeb("dashboard_no_applications", "No hay formularios creados. Usa el botón + para añadir uno.")}</p>`;
+        return;
+    }
+
+    container.innerHTML = validApplications.map(a => {
+        const questions = Array.isArray(a.questions) ? a.questions.filter(Boolean) : [];
+        const role = guildRoles.find(r => r.id === a.roleToGive);
+        const roleLabel = role ? role.name : (a.roleToGive ? a.roleToGive : tWeb("dashboard_app_role_none", "Ninguno"));
+
+        return `
         <div class="category-item" style="border: 1px solid var(--border-glass); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2);">
             <div class="category-info">
                 <div>
                     <div class="category-name" style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.25rem;">${a.name}</div>
                     <div class="category-desc" style="font-size: 0.9rem; color: var(--text-muted);">
-                        ${a.questions.length} preguntas • Rol: ${a.roleToGive ? 'Asignado' : 'Ninguno'}
+                        ${questions.length} ${tWeb("dashboard_questions_label", "preguntas")} • ${tWeb("dashboard_role_label", "Rol")}: ${roleLabel}
                     </div>
                 </div>
             </div>
             <button class="btn btn-sm btn-danger" onclick="deleteApplication('${a.id}')">🗑️</button>
         </div>
-    `).join("");
+    `;
+    }).join("");
 }
 
 function closeAppModal() {
@@ -743,21 +816,20 @@ function closeAppModal() {
 
 async function saveApplication() {
     const name = document.getElementById("appName").value.trim();
-    if (!name) return toast("El nombre es obligatorio", "error");
+    if (!name) return toast(tWeb("validation_name_required", "El nombre es obligatorio"), "error");
 
     const questions = Array.from(document.querySelectorAll(".app-question-input"))
         .map(i => i.value.trim())
         .filter(q => q !== "");
 
-    if (questions.length === 0) return toast("Añade al menos 1 pregunta", "error");
+    if (questions.length === 0) return toast(tWeb("validation_one_question", "Añade al menos 1 pregunta"), "error");
 
     const roleToGive = document.getElementById("appRoleToGive").value;
     const appId = "app_" + Date.now();
 
-    const newApp = { id: appId, name, questions, roleToGive };
+    const newApp = { id: appId, name, questions: questions.slice(0, 5), roleToGive };
     
-    // We get the current applications and append the new one via PATCH
-    const currentApps = serverData.config.applications || [];
+    const currentApps = Array.isArray(serverData?.config?.applications) ? [...serverData.config.applications] : [];
     currentApps.push(newApp);
 
     try {
@@ -797,7 +869,7 @@ window.deleteApplication = async function(appId) {
 async function saveAppChannelConfig() {
     const btn = document.getElementById("saveAppChannelBtn");
     btn.disabled = true;
-    btn.textContent = "Guardando...";
+    btn.textContent = tWeb("saving_generic", "Guardando...");
 
     try {
         const res = await fetch(`/api/server/${currentGuildId}/config`, {
@@ -813,7 +885,39 @@ async function saveAppChannelConfig() {
         toast("Error al guardar", "error");
     } finally {
         btn.disabled = false;
-        btn.textContent = "💾 Guardar Canal";
+        btn.textContent = tWeb("btn_save_channel", "💾 Guardar Canal");
+    }
+}
+
+async function sendAppPanel() {
+    const targetChannelId = document.getElementById("appPanelTargetSelect").value;
+    if (!targetChannelId) return toast(tWeb("validation_target_channel", "Selecciona un canal de destino para publicar el panel"), "error");
+
+    const btn = document.getElementById("sendAppPanelBtn");
+    const originalContent = btn.innerHTML;
+    btn.disabled = true;
+    btn.textContent = tWeb("sending_generic", "Enviando...");
+
+    try {
+        const res = await fetch(`/api/server/${currentGuildId}/panel-app/send`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ targetChannelId }),
+        });
+        const data = await res.json();
+        
+        if (!res.ok) throw new Error(data.error || "Error al enviar");
+        
+        const actionText = data.action === "actualizado"
+            ? tWeb("dashboard_panel_updated", "actualizado")
+            : tWeb("dashboard_panel_sent", "enviado");
+        toast(`✅ ${tWeb("dashboard_app_panel_success", "Panel de aplicaciones {action} correctamente", { action: actionText })}`);
+        await loadServerData(currentGuildId);
+    } catch (error) {
+        toast(error.message, "error");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
     }
 }
 
@@ -821,7 +925,7 @@ async function saveAppChannelConfig() {
 async function saveCustomization() {
     const btn = document.getElementById("saveCustomize");
     btn.disabled = true;
-    btn.textContent = "Guardando...";
+    btn.textContent = tWeb("saving_generic", "Guardando...");
 
     const updates = {
         panelEmbed: {
@@ -847,18 +951,18 @@ async function saveCustomization() {
         toast("Error al guardar", "error");
     } finally {
         btn.disabled = false;
-        btn.textContent = "💾 Guardar Cambios";
+        btn.textContent = tWeb("btn_save_changes", "💾 Guardar Cambios");
     }
 }
 
 // ═══ Preview en tiempo real ═══
 function updatePreview() {
-    const title = document.getElementById("embedTitle").value || "🎫 Sistema de Tickets";
-    const desc = document.getElementById("embedDescription").value || "Selecciona una categoría...";
+    const title = document.getElementById("embedTitle").value || tWeb("preview_default_title", "🎫 Sistema de Tickets");
+    const desc = document.getElementById("embedDescription").value || tWeb("preview_default_desc", "Selecciona una categoría...");
     const color = document.getElementById("embedColor").value || "#5865F2";
     const image = document.getElementById("embedImage").value;
     const thumb = document.getElementById("embedThumbnail").value;
-    const footer = document.getElementById("embedFooter").value || "Sistema de soporte";
+    const footer = document.getElementById("embedFooter").value || tWeb("preview_default_footer", "Sistema de soporte");
 
     document.getElementById("embedPreviewTitle").textContent = title;
     document.getElementById("embedPreviewDesc").textContent = desc;
@@ -921,7 +1025,8 @@ function truncate(str, len) {
 function formatDate(dateStr) {
     if (!dateStr) return "—";
     const d = new Date(dateStr);
-    return d.toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
+    const locale = webI18n && typeof webI18n.getLanguage === "function" && webI18n.getLanguage() === "en" ? "en-US" : "es-ES";
+    return d.toLocaleDateString(locale, { day: "2-digit", month: "short", year: "numeric" });
 }
 
 // ═══ Dev Terminal Global ═══

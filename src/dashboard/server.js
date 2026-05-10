@@ -10,6 +10,8 @@ import {
     ActionRowBuilder,
     StringSelectMenuBuilder,
     StringSelectMenuOptionBuilder,
+    ButtonBuilder,
+    ButtonStyle,
     ChannelType,
 } from "discord.js";
 
@@ -237,12 +239,18 @@ export function startDashboard(client) {
                 logChannelId: config.logChannelId,
                 supportRoles: config.supportRoles,
                 adminRoles: config.adminRoles,
+                dashboardRoles: config.dashboardRoles,
                 panelEmbed: config.panelEmbed,
                 panelChannelId: config.panelChannelId,
                 panelMessageId: config.panelMessageId,
                 ticketGreeting: config.ticketGreeting,
                 categories: config.categories,
                 bannedUsers: config.bannedUsers,
+                language: config.language,
+                applicationsChannelId: config.applicationsChannelId,
+                applicationsPanelChannelId: config.applicationsPanelChannelId,
+                applicationsPanelMessageId: config.applicationsPanelMessageId,
+                applications: config.applications,
             },
             stats: {
                 openTickets,
@@ -349,7 +357,7 @@ export function startDashboard(client) {
             ...(nativeAccess ? ["adminRoles", "dashboardRoles"] : []),
             "ticketCategoryId", "logChannelId", "transcriptChannelId",
             "panelChannelId", "panelEmbed", "ticketGreeting",
-            "language", "applicationsChannelId", "applications",
+            "language", "applicationsChannelId", "applicationsPanelChannelId", "applications",
         ];
 
         const updates = {};
@@ -547,6 +555,100 @@ export function startDashboard(client) {
         } catch (error) {
             console.error("❌ Error al enviar panel:", error);
             res.status(500).json({ error: "Error al enviar el panel. Verifica que el bot tiene permisos en el canal." });
+        }
+    });
+
+    // ══════════════════════════════════════
+    // API: Enviar Panel de Aplicaciones
+    // ══════════════════════════════════════
+    
+    app.post("/api/server/:guildId/panel-app/send", async (req, res) => {
+        if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
+
+        const { guildId } = req.params;
+        if (!(await hasAccess(req.session.user, guildId))) {
+            return res.status(403).json({ error: "Sin permisos" });
+        }
+
+        try {
+            const config = await getGuildConfig(guildId);
+            const guild = client.guilds.cache.get(guildId);
+            if (!guild) return res.status(404).json({ error: "El bot no está en ese servidor" });
+
+            if (!config.applications || config.applications.length === 0) {
+                return res.status(400).json({ error: "Debes crear al menos un formulario antes de enviar el panel" });
+            }
+
+            const { targetChannelId } = req.body;
+            const channelId = targetChannelId || config.applicationsPanelChannelId;
+            if (!channelId) {
+                return res.status(400).json({ error: "Debes seleccionar un canal para publicar el panel de aplicaciones" });
+            }
+
+            const validApplications = config.applications.filter(app => app?.id && app?.name);
+            if (validApplications.length === 0) {
+                return res.status(400).json({ error: "Los formularios configurados no son válidos. Crea uno nuevo desde el dashboard." });
+            }
+
+            if (validApplications.length > 25) {
+                return res.status(400).json({ error: "Discord solo permite 25 botones por mensaje. Reduce el número de formularios." });
+            }
+
+            const channel = guild.channels.cache.get(channelId);
+            if (!channel) return res.status(404).json({ error: "No se encontró el canal de destino en el servidor" });
+
+            const embed = new EmbedBuilder()
+                .setColor(0x5865F2)
+                .setTitle("📋 Sistema de Aplicaciones")
+                .setDescription("Selecciona el puesto al que deseas aplicar pulsando el botón correspondiente. Rellena el formulario con sinceridad.");
+
+            const rows = [];
+            for (let i = 0; i < validApplications.length; i += 5) {
+                const row = new ActionRowBuilder();
+                validApplications.slice(i, i + 5).forEach(app => {
+                    row.addComponents(
+                        new ButtonBuilder()
+                            .setCustomId(`app_start_${app.id}`)
+                            .setLabel(`Aplicar a ${app.name}`.slice(0, 80))
+                            .setStyle(ButtonStyle.Primary)
+                    );
+                });
+                rows.push(row);
+            }
+
+            const messagePayload = { embeds: [embed], components: rows };
+            let messageId = config.applicationsPanelMessageId;
+            let action = "enviado";
+
+            if (messageId) {
+                try {
+                    const existingMessage = await channel.messages.fetch(messageId);
+                    await existingMessage.edit(messagePayload);
+                    action = "actualizado";
+                } catch (_) {
+                    messageId = null;
+                }
+            }
+
+            if (!messageId) {
+                const sent = await channel.send(messagePayload);
+                messageId = sent.id;
+            }
+
+            await updateGuildConfig(guildId, {
+                applicationsPanelChannelId: channelId,
+                applicationsPanelMessageId: messageId,
+            });
+
+            res.json({
+                success: true,
+                action,
+                channelId,
+                messageId,
+            });
+        } catch (error) {
+            console.error("❌ Error al enviar panel de aplicaciones:", error);
+            res.status(500).json({ error: "Error al enviar el panel" });
         }
     });
 
