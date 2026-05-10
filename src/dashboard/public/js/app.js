@@ -143,6 +143,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Evento: guardar personalización
     document.getElementById("saveCustomize").addEventListener("click", saveCustomization);
 
+    // Evento: añadir campo de embed
+    document.getElementById("addEmbedFieldBtn").addEventListener("click", () => {
+        addEmbedFieldRow();
+        updatePreview();
+    });
+
     // Evento: Dev Terminal Premium
     const devPremiumBtn = document.getElementById("devPremiumBtn");
     if (devPremiumBtn) {
@@ -371,6 +377,15 @@ function populateDashboard(data) {
     document.getElementById("embedThumbnail").value = p.thumbnail || "";
     document.getElementById("embedFooter").value = data.guild.isPremium ? (p.footer || "") : "⚡ Powered by Tenancy";
     document.getElementById("greetingText").value = data.config.ticketGreeting || "";
+    
+    // Customize: embed fields (array)
+    const fieldsContainer = document.getElementById("embedFieldsList");
+    if (fieldsContainer) {
+        fieldsContainer.innerHTML = "";
+        const savedFields = Array.isArray(p.fields) ? p.fields : [];
+        savedFields.forEach(f => addEmbedFieldRow(f.name, f.value, f.inline));
+    }
+    updatePreview();
     
     // Muro de Pago UI
     if (!data.guild.isPremium) {
@@ -948,11 +963,41 @@ async function sendAppPanel() {
     }
 }
 
+// ═══ Gestión de Campos del Embed ═══
+function addEmbedFieldRow(name = "", value = "", inline = false) {
+    const container = document.getElementById("embedFieldsList");
+    if (!container) return;
+    const count = container.querySelectorAll(".embed-field-row").length;
+    if (count >= 6) { toast("Máximo 6 campos permitidos", "error"); return; }
+    const row = document.createElement("div");
+    row.className = "embed-field-row";
+    row.style.cssText = "display:grid; grid-template-columns: 1fr 1fr auto auto; gap:0.5rem; align-items:center; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius:8px; padding:0.6rem 0.8rem;";
+    row.innerHTML = `
+        <input type="text" class="form-input ef-name" placeholder="Nombre del campo" value="${name.replace(/"/g,'&quot;')}" style="font-size:0.85rem; padding:0.4rem 0.6rem;">
+        <input type="text" class="form-input ef-value" placeholder="Valor del campo" value="${value.replace(/"/g,'&quot;')}" style="font-size:0.85rem; padding:0.4rem 0.6rem;">
+        <label style="display:flex; align-items:center; gap:0.3rem; font-size:0.8rem; color:#a0a8c2; white-space:nowrap; cursor:pointer;">
+            <input type="checkbox" class="ef-inline" ${inline ? 'checked' : ''}> En línea
+        </label>
+        <button type="button" class="btn btn-sm" style="background:rgba(255,50,50,0.15); border-color:rgba(255,50,50,0.4); color:#ff6b6b; padding:0.3rem 0.6rem;" onclick="this.closest('.embed-field-row').remove(); updatePreview();">✕</button>
+    `;
+    row.querySelectorAll("input").forEach(inp => inp.addEventListener("input", updatePreview));
+    container.appendChild(row);
+}
+
 // ═══ Guardar Personalización ═══
 async function saveCustomization() {
     const btn = document.getElementById("saveCustomize");
     btn.disabled = true;
     btn.textContent = tWeb("saving_generic", "Guardando...");
+
+    // Collect embed fields
+    const embedFields = [];
+    document.querySelectorAll(".embed-field-row").forEach(row => {
+        const name = row.querySelector(".ef-name").value.trim();
+        const value = row.querySelector(".ef-value").value.trim();
+        const inline = row.querySelector(".ef-inline").checked;
+        if (name || value) embedFields.push({ name, value, inline });
+    });
 
     const updates = {
         panelEmbed: {
@@ -962,6 +1007,7 @@ async function saveCustomization() {
             image: document.getElementById("embedImage").value,
             thumbnail: document.getElementById("embedThumbnail").value,
             footer: document.getElementById("embedFooter").value,
+            fields: embedFields,
         },
         ticketGreeting: document.getElementById("greetingText").value,
     };
@@ -1003,6 +1049,35 @@ function updatePreview() {
     const thumbEl = document.getElementById("embedPreviewThumb");
     if (thumb) { thumbEl.src = thumb; thumbEl.style.display = "block"; }
     else { thumbEl.style.display = "none"; }
+
+    // Render fields in preview
+    const fieldsPreview = document.getElementById("embedPreviewFields");
+    if (fieldsPreview) {
+        const fieldRows = document.querySelectorAll(".embed-field-row");
+        const fieldsData = [];
+        fieldRows.forEach(row => {
+            const name = row.querySelector(".ef-name").value.trim();
+            const val = row.querySelector(".ef-value").value.trim();
+            const inline = row.querySelector(".ef-inline").checked;
+            if (name || val) fieldsData.push({ name, value: val, inline });
+        });
+        if (fieldsData.length > 0) {
+            fieldsPreview.style.display = "block";
+            // Group inline fields in rows of 3
+            let html = '<div class="embed-fields-grid">';
+            fieldsData.forEach(field => {
+                html += `<div class="embed-field${field.inline ? ' ef-inline-field' : ' ef-block-field'}">
+                    <div class="ef-preview-name">${field.name || '\u200b'}</div>
+                    <div class="ef-preview-value">${field.value || '\u200b'}</div>
+                </div>`;
+            });
+            html += '</div>';
+            fieldsPreview.innerHTML = html;
+        } else {
+            fieldsPreview.style.display = "none";
+            fieldsPreview.innerHTML = "";
+        }
+    }
 }
 
 // ═══ Navegación ═══
