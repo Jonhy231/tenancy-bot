@@ -349,6 +349,7 @@ export function startDashboard(client) {
             ...(nativeAccess ? ["adminRoles", "dashboardRoles"] : []),
             "ticketCategoryId", "logChannelId", "transcriptChannelId",
             "panelChannelId", "panelEmbed", "ticketGreeting",
+            "language", "applicationsChannelId", "applications",
         ];
 
         const updates = {};
