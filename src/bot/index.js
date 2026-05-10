@@ -12,24 +12,28 @@ const client = new Client({
     ],
 });
 
-// Colección de comandos slash
 client.commands = new Collection();
 
 async function main() {
-    // 1. Conectar a MongoDB
-    await connectDB();
-
-    // 2. Cargar comandos slash
-    await loadCommands(client);
-
-    // 3. Configurar eventos (tickets, botones, modales, slash commands)
-    setupEvents(client);
-
-    // 4. Iniciar dashboard ANTES del login para que Railway
-    //    encuentre el servidor HTTP desde el primer healthcheck
+    // 1. Express arranca PRIMERO — Railway necesita /health respondiendo
+    //    antes de que pasen los 30s del healthcheckTimeout.
     startDashboard(client);
 
-    // 5. Login (el bot se conecta a Discord en segundo plano)
+    // 2. Conectar a MongoDB (si falla, loggeamos pero NO matamos el proceso)
+    try {
+        await connectDB();
+    } catch (err) {
+        console.error("⚠️  MongoDB no disponible al arrancar:", err.message);
+        // No hacemos process.exit() — Express ya está vivo para el healthcheck
+    }
+
+    // 3. Cargar comandos slash
+    await loadCommands(client);
+
+    // 4. Configurar eventos
+    setupEvents(client);
+
+    // 5. Login a Discord
     await client.login(process.env.BOT_TOKEN);
 }
 

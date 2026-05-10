@@ -2,14 +2,11 @@ import mongoose from "mongoose";
 
 /**
  * Conecta a MongoDB Atlas.
- * Se llama una vez al iniciar el bot.
+ * NO llama process.exit() — deja que el caller decida qué hacer.
+ * Esto permite que Express siga vivo para el healthcheck de Railway
+ * incluso si MongoDB tarda en conectar.
  */
 export async function connectDB() {
-    try {
-        await mongoose.connect(process.env.MONGODB_URI);
-        console.log("✅ Conectado a MongoDB Atlas");
-    } catch (error) {
-        console.error("❌ Error al conectar a MongoDB:", error.message);
-        process.exit(1);
-    }
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log("✅ Conectado a MongoDB Atlas");
 }
