@@ -20,7 +20,10 @@ export const STRINGS = {
     INVALID_COLOR: "❌ Color no válido. Usa un código HEX (ej: `#5865F2`) o un nombre: `rojo`, `azul`, `verde`, `morado`, `amarillo`, `naranja`, `rosa`, `blanco`, `negro`.",
     INVALID_URL: "❌ La URL `{url}` no es válida. Debe ser una URL HTTPS que apunte a una imagen.",
     ANNOUNCEMENT_EMPTY: "❌ Debes incluir un **título** y **contenido** para el anuncio.",
-    BUTTON_INVALID: "❌ Para añadir un botón, incluye ambos: **texto** y **URL** (separados por `|`). Ejemplo: `Más info|https://ejemplo.com`",
+    BUTTON_INVALID: "❌ Botón inválido. Usa el formato **texto|url**. Ejemplo: `Más info|https://ejemplo.com`",
+    FIELD_INVALID: "❌ Campo inválido. Usa el formato **nombre|valor|inline**. El tercer valor es opcional y acepta `si` o `no`. Ejemplo: `Titulo|Texto del campo|si`",
+    EMBED_SEND_ERROR: "❌ No se pudo enviar el embed al canal seleccionado. Verifica permisos del bot y del canal.",
+    ANNOUNCEMENT_SEND_ERROR: "❌ No se pudo publicar el anuncio en el canal seleccionado. Verifica permisos del bot y del canal.",
 
     // ═══ Confirmación ═══
     EMBED_PREVIEW: "📋 **Vista previa del embed.** ¿Deseas enviarlo?",
