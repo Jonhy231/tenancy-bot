@@ -7,6 +7,12 @@ const categorySchema = new mongoose.Schema({
     description: { type: String, default: "Soporte general" },
 });
 
+const embedFieldSchema = new mongoose.Schema({
+    name: { type: String, default: "\u200b" },
+    value: { type: String, default: "\u200b" },
+    inline: { type: Boolean, default: false },
+}, { _id: false });
+
 const panelEmbedSchema = new mongoose.Schema({
     title: { type: String, default: "🎫 Sistema de Tickets" },
     description: { type: String, default: "Selecciona una categoría para abrir un ticket.\nNuestro equipo te atenderá lo antes posible." },
@@ -14,6 +20,7 @@ const panelEmbedSchema = new mongoose.Schema({
     thumbnail: { type: String, default: "" },
     image: { type: String, default: "" },
     footer: { type: String, default: "Sistema de soporte" },
+    fields: { type: [embedFieldSchema], default: [] },
 }, { _id: false });
 
 const guildSchema = new mongoose.Schema({
