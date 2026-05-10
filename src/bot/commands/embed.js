@@ -17,7 +17,10 @@ import { getGuildConfig } from "../../database/cache.js";
 // Modo 1 → pega un JSON de embed directamente
 // Modo 2 → opciones individuales (título, descripción,
 //           color, imagen, miniatura, footer, author,
-//           URL de título y hasta 5 fields opcionales)
+//           URL de título y hasta 4 fields opcionales)
+//
+// NOTA: Discord limita los slash commands a 25 opciones.
+// Este comando usa 23 (se eliminó field5 para no superar el límite).
 // ═══════════════════════════════════════════
 
 export const data = new SlashCommandBuilder()
@@ -75,9 +78,9 @@ export const data = new SlashCommandBuilder()
         opt.setName("footer")
             .setDescription("Texto del footer"))
 
-    // ── Fields opcionales (hasta 5) ────────────────────────────────
-    // Necesitas nombre + valor para que el field se incluya.
-    // inline es siempre opcional (default: false).
+    // ── Fields opcionales (hasta 4) ────────────────────────────────
+    // Discord limita los slash commands a 25 opciones en total.
+    // Con 11 opciones base, solo caben 4 fields (4×3 = 12 → total 23).
 
     // Field 1
     .addStringOption(opt =>
@@ -129,20 +132,7 @@ export const data = new SlashCommandBuilder()
             .setMaxLength(1024))
     .addBooleanOption(opt =>
         opt.setName("field4_inline")
-            .setDescription("¿Field 4 en línea?"))
-
-    // Field 5
-    .addStringOption(opt =>
-        opt.setName("field5_nombre")
-            .setDescription("Nombre del field 5")
-            .setMaxLength(256))
-    .addStringOption(opt =>
-        opt.setName("field5_valor")
-            .setDescription("Valor del field 5")
-            .setMaxLength(1024))
-    .addBooleanOption(opt =>
-        opt.setName("field5_inline")
-            .setDescription("¿Field 5 en línea?"));
+            .setDescription("¿Field 4 en línea?"));
 
 // ═══════════════════════════════════════════
 // execute
@@ -411,12 +401,12 @@ function buildEmbed({ titulo, tituloUrl, descripcion, color, imagen, miniatura, 
 }
 
 /**
- * Lee los 5 posibles fields del interaction.
+ * Lee los 4 posibles fields del interaction.
  * Solo incluye un field si tiene nombre Y valor (ambos son opcionales).
  */
 function collectFields(interaction) {
     const fields = [];
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 1; i <= 4; i++) {
         const name   = interaction.options.getString(`field${i}_nombre`);
         const value  = interaction.options.getString(`field${i}_valor`);
         const inline = interaction.options.getBoolean(`field${i}_inline`) ?? false;
