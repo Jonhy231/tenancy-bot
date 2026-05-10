@@ -41,11 +41,14 @@ export function startDashboard(client) {
     // ══════════════════════════════════════
 
     app.get("/health", (req, res) => {
+        // Siempre 200 — Railway solo necesita que el servidor responda.
+        // El estado del bot es informativo, no condiciona el healthcheck.
+        const isReady = client?.isReady?.() ?? false;
         res.status(200).json({
             status: "ok",
             uptime: Math.floor(process.uptime()),
-            bot: client.isReady() ? "online" : "connecting",
-            guilds: client.guilds.cache.size,
+            bot: isReady ? "online" : "connecting",
+            guilds: isReady ? client.guilds.cache.size : 0,
         });
     });
 
@@ -711,11 +714,6 @@ export function startDashboard(client) {
         
         return false;
     }
-
-    // ═══ Health Check (Railway) ═══
-    app.get("/health", (req, res) => {
-        res.status(200).send("OK");
-    });
 
     // ═══ SPA fallback ═══
     app.get("/dashboard*", (req, res) => {

@@ -4,7 +4,6 @@ import { connectDB } from "../database/connection.js";
 import { setupEvents } from "./events/ready.js";
 import { loadCommands } from "./handlers/commandLoader.js";
 import { startDashboard } from "../dashboard/server.js";
-import { startHealthServer } from "./healthcheck.js";
 
 const client = new Client({
     intents: [
@@ -26,14 +25,12 @@ async function main() {
     // 3. Configurar eventos (tickets, botones, modales, slash commands)
     setupEvents(client);
 
-    // 4. Login
-    await client.login(process.env.BOT_TOKEN);
-
-    // 5. Iniciar dashboard web (después del login)
+    // 4. Iniciar dashboard ANTES del login para que Railway
+    //    encuentre el servidor HTTP desde el primer healthcheck
     startDashboard(client);
 
-    // 6. Servidor HTTP de healthcheck para Railway
-    startHealthServer(client);
+    // 5. Login (el bot se conecta a Discord en segundo plano)
+    await client.login(process.env.BOT_TOKEN);
 }
 
 main().catch((err) => {
