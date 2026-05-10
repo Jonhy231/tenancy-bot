@@ -1019,6 +1019,11 @@ async function saveCustomization() {
             body: JSON.stringify(updates),
         });
         if (!res.ok) throw new Error();
+        // Actualizar caché local para que al volver a la vista los datos sean correctos
+        if (serverData && serverData.config) {
+            serverData.config.panelEmbed = updates.panelEmbed;
+            serverData.config.ticketGreeting = updates.ticketGreeting;
+        }
         toast("✅ Personalización guardada");
     } catch {
         toast("Error al guardar", "error");

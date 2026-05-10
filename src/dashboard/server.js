@@ -497,6 +497,19 @@ export function startDashboard(client) {
                 embed.setFooter({ text: "⚡ Powered by Tenancy" });
             }
 
+            // ═══ Fields del Embed ═══
+            if (Array.isArray(panel.fields) && panel.fields.length > 0) {
+                const embedFields = panel.fields
+                    .filter(f => f && (f.name || f.value))
+                    .slice(0, 25)
+                    .map(f => ({
+                        name: f.name || "\u200b",
+                        value: f.value || "\u200b",
+                        inline: f.inline === true,
+                    }));
+                if (embedFields.length > 0) embed.addFields(embedFields);
+            }
+
             // ═══ Construir Select Menu ═══
             const selectMenu = new StringSelectMenuBuilder()
                 .setCustomId("ticket_category_select")
