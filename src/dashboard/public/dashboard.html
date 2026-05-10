@@ -20,7 +20,10 @@
     <!-- ═══ Topbar ═══ -->
     <header class="topbar">
         <div class="topbar-left">
-            <span class="brand-text glitch-hover">Ten<span class="accent">ancy</span></span>
+            <div class="nav-brand">
+                <span class="brand-mark brand-mark-logo" aria-hidden="true"></span>
+                <span class="brand-text">Ten<span class="accent">ancy</span></span>
+            </div>
         </div>
         <div class="topbar-center">
             <select id="serverSelector" class="server-select">
@@ -121,7 +124,7 @@
             <!-- ═══ VISTA: Overview ═══ -->
             <div id="overviewView" class="view" style="display:none;">
                 <div class="view-header">
-                    <h1><i class="ph ph-activity"></i> <span data-i18n="dashboard_overview_title">VISTA GENERAL</span> <span class="cursor-blink"></span></h1>
+                    <h1><i class="ph ph-activity"></i> <span data-i18n="dashboard_overview_title">VISTA GENERAL</span></h1>
                     <p class="view-subtitle" id="serverName">TARGET_NODE</p>
                 </div>
                 <div class="stats-grid">
@@ -179,7 +182,7 @@
             <!-- ═══ VISTA: Tickets ═══ -->
             <div id="ticketsView" class="view" style="display:none;">
                 <div class="view-header">
-                    <h1><i class="ph ph-terminal-window"></i> <span data-i18n="dashboard_tickets_title">GESTIÓN DE TICKETS</span> <span class="cursor-blink"></span></h1>
+                    <h1><i class="ph ph-terminal-window"></i> <span data-i18n="dashboard_tickets_title">GESTIÓN DE TICKETS</span></h1>
                 </div>
                 <div class="tabs">
                     <button class="tab active" data-tab="open"><span data-i18n="tab_open">🟢 Abiertos</span> (<span id="tabOpenCount">0</span>)</button>
@@ -211,7 +214,7 @@
             <!-- ═══ VISTA: Configuración ═══ -->
             <div id="configView" class="view" style="display:none;">
                 <div class="view-header">
-                    <h1><i class="ph ph-faders"></i> <span data-i18n="dashboard_config_title">SYS_CONFIG</span> <span class="cursor-blink"></span></h1>
+                    <h1><i class="ph ph-faders"></i> <span data-i18n="dashboard_config_title">SYS_CONFIG</span></h1>
                     <p class="view-subtitle" data-i18n="dashboard_config_subtitle">PARÁMETROS DE INSTANCIA LOCAL</p>
                 </div>
                 <div class="config-grid">
@@ -364,7 +367,7 @@
             <!-- ═══ VISTA: Personalización ═══ -->
             <div id="customizeView" class="view" style="display:none;">
                 <div class="view-header">
-                    <h1><i class="ph ph-paint-brush-broad"></i> <span data-i18n="dashboard_customize_title">UI_OVERRIDE</span> <span class="cursor-blink"></span></h1>
+                    <h1><i class="ph ph-paint-brush-broad"></i> <span data-i18n="dashboard_customize_title">UI_OVERRIDE</span></h1>
                     <p class="view-subtitle" data-i18n="dashboard_customize_subtitle">CONFIGURACIÓN VISUAL DEL EMBED</p>
                 </div>
                 <div class="customize-layout">
@@ -445,7 +448,7 @@
             <!-- ═══ VISTA: Aplicaciones ═══ -->
             <div id="applicationsView" class="view" style="display:none;">
                 <div class="view-header">
-                    <h1><i class="ph ph-files"></i> <span data-i18n="dashboard_applications_title">APPLIC_SYS</span> <span class="cursor-blink"></span></h1>
+                    <h1><i class="ph ph-files"></i> <span data-i18n="dashboard_applications_title">APPLIC_SYS</span></h1>
                     <p class="view-subtitle" data-i18n="dashboard_applications_subtitle">FORMULARIOS DE STAFF</p>
                 </div>
 
@@ -504,8 +507,7 @@
             <!-- ═══ VISTA SECRETA: Dev Terminal ═══ -->
             <div id="devTerminalView" class="view" style="display:none;">
                 <div class="view-header">
-                    <h1 style="color: #ff00ff;"><i class="ph ph-code"></i> DEV_TERMINAL <span
-                            class="cursor-blink"></span></h1>
+                    <h1 style="color: #ff00ff;"><i class="ph ph-code"></i> DEV_TERMINAL</h1>
                     <p class="view-subtitle">SISTEMA DE ADMINISTRACIÓN GLOBAL - SOLO PROPIETARIO</p>
                 </div>
                 <div class="card">
