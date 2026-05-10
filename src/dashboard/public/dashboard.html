@@ -13,6 +13,9 @@
 </head>
 
 <body class="dashboard-page">
+    <div class="dashboard-ambient dashboard-ambient-a" aria-hidden="true"></div>
+    <div class="dashboard-ambient dashboard-ambient-b" aria-hidden="true"></div>
+    <div class="dashboard-gridlines" aria-hidden="true"></div>
 
     <!-- ═══ Topbar ═══ -->
     <header class="topbar">
@@ -82,30 +85,30 @@
             </div>
 
             <!-- ═══ Selector de Servidores ═══ -->
-            <div id="serverSelectorView" class="view" style="display:none; position: relative;">
+            <div id="serverSelectorView" class="view server-selector-view" style="display:none; position: relative;">
                 <button id="devSelectorBtn" class="btn"
                     style="display:none; position: absolute; top: 0; right: 0; background: rgba(255,0,255,0.1); border: 1px solid #ff00ff; color: #ff00ff;"
                     onclick="showDevTerminalGlobal()">
                     <i class="ph ph-code" style="font-size: 1.2rem; margin-right: 5px;"></i> <span data-i18n="sidebar_dev">DEV_TERMINAL</span>
                 </button>
-                <div class="view-header" style="text-align: center; margin-bottom: 3rem;">
+                <div class="view-header server-selector-hero" style="text-align: center; margin-bottom: 3rem;">
                     <h1 data-i18n="dashboard_server_selector_title">Selector de Servidores</h1>
                     <p class="view-subtitle" data-i18n="dashboard_server_selector_subtitle">Selecciona un servidor para gestionar Tenancy o invita al bot a uno nuevo.
                     </p>
                 </div>
 
-                <h2 style="margin-bottom: 1rem; border-bottom: var(--border-glass); padding-bottom: 0.5rem;" data-i18n="dashboard_servers_with_bot">
+                <h2 class="section-divider-title" style="margin-bottom: 1rem; border-bottom: var(--border-glass); padding-bottom: 0.5rem;" data-i18n="dashboard_servers_with_bot">
                     Servidores
                     con Tenancy</h2>
-                <div class="server-grid" id="serversWithBotGrid"
+                <div class="server-grid server-grid-enhanced" id="serversWithBotGrid"
                     style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 3rem;">
                     <!-- Llenado por JS -->
                 </div>
 
-                <h2 style="margin-bottom: 1rem; border-bottom: var(--border-glass); padding-bottom: 0.5rem;" data-i18n="dashboard_servers_without_bot">
+                <h2 class="section-divider-title" style="margin-bottom: 1rem; border-bottom: var(--border-glass); padding-bottom: 0.5rem;" data-i18n="dashboard_servers_without_bot">
                     Servidores
                     sin Tenancy</h2>
-                <div class="server-grid" id="serversWithoutBotGrid"
+                <div class="server-grid server-grid-enhanced" id="serversWithoutBotGrid"
                     style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;">
                     <!-- Llenado por JS -->
                 </div>

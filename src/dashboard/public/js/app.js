@@ -244,11 +244,19 @@ function renderServerSelector() {
         gridWith.innerHTML = `<p class="text-muted">${tWeb("dashboard_servers_with_bot_empty", "No tienes servidores con Tenancy instalado o no tienes permisos de administrador.")}</p>`;
     } else {
         gridWith.innerHTML = serversWithBot.map(s => `
-                <div class="card" style="text-align: center; margin-bottom: 0;">
-                    <img src="${s.icon || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="Icon" style="width: 64px; height: 64px; border-radius: 50%; margin: 1rem auto; display: block;">
-                    <h3>${s.name}</h3>
-                    <p class="text-muted text-sm" style="margin-bottom: 1rem;">${s.memberCount} ${tWeb("dashboard_members_label", "miembros")}</p>
-                    <button class="btn btn-primary" style="width: 100%;" onclick="loadServerData('${s.id}')">${tWeb("dashboard_manage_btn", "Gestionar")}</button>
+                <div class="card server-node-card">
+                    <div class="server-node-aura"></div>
+                    <div class="server-node-head">
+                        <img src="${s.icon || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="Icon" class="server-node-avatar">
+                        <div class="server-node-meta">
+                            <span class="server-node-label">${tWeb("dashboard_live_workspace", "Workspace activo")}</span>
+                            <h3>${s.name}</h3>
+                            <p class="text-muted">${s.memberCount} ${tWeb("dashboard_members_label", "miembros")}</p>
+                        </div>
+                    </div>
+                    <div class="server-node-actions">
+                        <button class="btn btn-primary" style="width: 100%;" onclick="loadServerData('${s.id}')">${tWeb("dashboard_manage_btn", "Gestionar")}</button>
+                    </div>
                 </div>
             `).join("");
     }
@@ -257,11 +265,19 @@ function renderServerSelector() {
         gridWithout.innerHTML = `<p class="text-muted">${tWeb("dashboard_servers_without_bot_empty", "No tienes servidores pendientes.")}</p>`;
     } else {
         gridWithout.innerHTML = serversWithoutBot.map(s => `
-                <div class="card" style="text-align: center; margin-bottom: 0; opacity: 0.8;">
-                    <img src="${s.icon || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="Icon" style="width: 64px; height: 64px; border-radius: 50%; margin: 1rem auto; display: block; filter: grayscale(100%);">
-                    <h3>${s.name}</h3>
-                    <p class="text-muted text-sm" style="margin-bottom: 1rem;">${tWeb("dashboard_missing_install", "Falta instalar Tenancy")}</p>
-                    <a href="https://discord.com/oauth2/authorize?client_id=1181289902558675026&permissions=8&scope=bot%20applications.commands&guild_id=${s.id}" target="_blank" class="btn btn-outline" style="width: 100%;">${tWeb("dashboard_invite_btn", "Invitar")}</a>
+                <div class="card server-node-card server-node-card-muted">
+                    <div class="server-node-aura"></div>
+                    <div class="server-node-head">
+                        <img src="${s.icon || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="Icon" class="server-node-avatar server-node-avatar-muted">
+                        <div class="server-node-meta">
+                            <span class="server-node-label">${tWeb("dashboard_pending_install", "Instalacion pendiente")}</span>
+                            <h3>${s.name}</h3>
+                            <p class="text-muted">${tWeb("dashboard_missing_install", "Falta instalar Tenancy")}</p>
+                        </div>
+                    </div>
+                    <div class="server-node-actions">
+                        <a href="https://discord.com/oauth2/authorize?client_id=1181289902558675026&permissions=8&scope=bot%20applications.commands&guild_id=${s.id}" target="_blank" class="btn btn-outline" style="width: 100%;">${tWeb("dashboard_invite_btn", "Invitar")}</a>
+                    </div>
                 </div>
             `).join("");
     }
@@ -790,18 +806,29 @@ function renderApplications(applications) {
         const questions = Array.isArray(a.questions) ? a.questions.filter(Boolean) : [];
         const role = guildRoles.find(r => r.id === a.roleToGive);
         const roleLabel = role ? role.name : (a.roleToGive ? a.roleToGive : tWeb("dashboard_app_role_none", "Ninguno"));
+        const questionMarkup = questions.length
+            ? questions.map((question, index) => `<span class="app-question-chip">Q${index + 1} · ${question}</span>`).join("")
+            : `<span class="app-question-chip">${tWeb("validation_one_question", "Añade al menos 1 pregunta")}</span>`;
 
         return `
-        <div class="category-item" style="border: 1px solid var(--border-glass); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2);">
-            <div class="category-info">
+        <div class="application-card">
+            <div class="application-card-accent"></div>
+            <div class="application-card-head">
                 <div>
-                    <div class="category-name" style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.25rem;">${a.name}</div>
-                    <div class="category-desc" style="font-size: 0.9rem; color: var(--text-muted);">
+                    <div class="application-card-kicker">${tWeb("dashboard_app_flow_label", "Flujo de postulacion")}</div>
+                    <div class="category-name application-card-title">${a.name}</div>
+                    <div class="category-desc application-card-meta">
                         ${questions.length} ${tWeb("dashboard_questions_label", "preguntas")} • ${tWeb("dashboard_role_label", "Rol")}: ${roleLabel}
                     </div>
                 </div>
+                <span class="app-role-pill">${roleLabel}</span>
             </div>
-            <button class="btn btn-sm btn-danger" onclick="deleteApplication('${a.id}')">🗑️</button>
+            <div class="app-question-list">
+                ${questionMarkup}
+            </div>
+            <div class="application-card-actions">
+                <button class="btn btn-sm btn-danger" onclick="deleteApplication('${a.id}')">🗑️</button>
+            </div>
         </div>
     `;
     }).join("");

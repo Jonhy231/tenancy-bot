@@ -3,82 +3,341 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="landing_page_title">Tenancy — El Sistema de Soporte Definitivo</title>
+    <title data-i18n="landing_page_title">Tenancy - El Sistema de Soporte Definitivo</title>
     <meta name="description" content="Tenancy Multi-tenant system.">
     <link rel="stylesheet" href="/css/style.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
-<body class="landing-page" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; background: #000; background-image: radial-gradient(circle at 50% 0%, rgba(94, 92, 230, 0.2), transparent 50%), radial-gradient(circle at 100% 100%, rgba(50, 173, 230, 0.1), transparent 50%);">
-    
-    <nav class="topbar" style="position: sticky; top: 0; width: 100%; justify-content: space-between; background: rgba(10, 12, 16, 0.8); border-bottom: var(--border-glass); backdrop-filter: blur(20px); z-index: 50;">
-        <div class="nav-brand">
-            <span class="brand-text" style="font-size: 1.5rem;">Ten<span class="accent">ancy</span></span>
+<body class="landing-page">
+    <div class="ambient-grid" aria-hidden="true"></div>
+    <div class="page-noise" aria-hidden="true"></div>
+    <nav class="topbar">
+        <div class="topbar-left">
+            <div class="nav-brand">
+                <span class="brand-mark" aria-hidden="true"></span>
+                <span class="brand-text">Ten<span class="accent">ancy</span></span>
+            </div>
         </div>
-        <div style="display: flex; gap: 1.5rem; align-items: center;">
-            <select id="siteLanguageSelect" class="form-input" style="width: auto; padding: 0.3rem 0.5rem; height: auto; border-radius: 4px; border: 1px solid var(--border-glass); background: rgba(0,0,0,0.5); color: #fff;">
-                <option value="es">🇪🇸 ES</option>
-                <option value="en">🇺🇸 EN</option>
+        <div class="topbar-center">
+            <div class="nav-links">
+                <a href="/contact.html" class="nav-link" data-i18n="nav_contact">Contacto</a>
+                <a href="#docs" class="nav-link" data-i18n="nav_docs">Docs</a>
+                <a href="#features" class="nav-link" data-i18n="landing_nav_features">Ventajas</a>
+                <a href="https://discord.com/oauth2/authorize?client_id=1181289902558675026&permissions=8&scope=bot%20applications.commands" target="_blank" class="nav-link" data-i18n="nav_invite">Invitar Bot</a>
+            </div>
+        </div>
+        <div class="topbar-right">
+            <select id="siteLanguageSelect" class="form-input" style="width:auto;">
+                <option value="es">ES</option>
+                <option value="en">EN</option>
             </select>
-            <a href="/contact.html" style="color: var(--text-main); font-weight: 500;" data-i18n="nav_contact">Contacto</a>
-            <a href="#docs" style="color: var(--text-main); font-weight: 500;" data-i18n="nav_docs">Docs</a>
-            <a href="https://discord.com/oauth2/authorize?client_id=1181289902558675026&permissions=8&scope=bot%20applications.commands" target="_blank" style="color: var(--text-main); font-weight: 500;" data-i18n="nav_invite">Invitar Bot</a>
             <a href="/auth/discord" class="btn btn-primary btn-sm" data-i18n="nav_panel">Panel Web</a>
         </div>
     </nav>
 
-    <main class="terminal-wrapper" style="max-width: 800px; text-align: center; margin-top: 100px;">
-        <h1 style="font-size: 4rem; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; background: linear-gradient(135deg, #fff 0%, #a5a5a5 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;" data-i18n="landing_hero_title">Tenancy Bot</h1>
-        <p style="font-size: 1.25rem; color: var(--text-muted); margin-bottom: 3rem; line-height: 1.6; max-width: 600px; margin-left: auto; margin-right: auto;" data-i18n="hero_desc">
-            Tu solución definitiva para la gestión de tickets. Tenancy facilita el soporte de tu servidor con un panel web intuitivo, personalización avanzada y constantes actualizaciones para mejorar la experiencia de tu comunidad.
-        </p>
-        
-        <div style="display: flex; gap: 1rem; justify-content: center; align-items: center;">
-            <a href="/auth/discord" class="btn btn-primary btn-lg" style="font-size: 1.1rem; padding: 16px 32px; border-radius: 30px;">
-                <i class="ph ph-discord-logo" style="font-size: 1.5rem;"></i> <span data-i18n="btn_access_panel">Acceder al Panel</span>
-            </a>
-            <a href="https://discord.com/oauth2/authorize?client_id=1181289902558675026&permissions=8&scope=bot%20applications.commands" target="_blank" class="btn btn-outline btn-lg" style="font-size: 1.1rem; padding: 16px 32px; border-radius: 30px;">
-                <i class="ph ph-rocket" style="font-size: 1.5rem;"></i> <span data-i18n="btn_invite_bot">Invitar Bot</span>
-            </a>
-        </div>
+    <main class="main-shell">
+        <section class="hero-section">
+            <div class="hero-grid">
+                <article class="hero-card hero-copy">
+                    <span class="hero-badge">
+                        <i class="ph ph-sparkle"></i>
+                        <span data-i18n="landing_badge">Experiencia premium para soporte serio</span>
+                    </span>
+                    <h1 class="hero-title">
+                        <span class="title-gradient" data-i18n="landing_hero_title">Tenancy Bot</span>
+                        <span class="title-sub" data-i18n="landing_hero_title_sub">Infraestructura visual y operativa para tickets</span>
+                    </h1>
+                    <p class="hero-description" data-i18n="hero_desc">
+                        Tu solucion definitiva para la gestion de tickets. Tenancy facilita el soporte de tu servidor con un panel web intuitivo, personalizacion avanzada y constantes actualizaciones para mejorar la experiencia de tu comunidad.
+                    </p>
+                    <div class="hero-actions">
+                        <a href="/auth/discord" class="btn btn-primary btn-lg">
+                            <i class="ph ph-layout"></i>
+                            <span data-i18n="btn_access_panel">Acceder al Panel</span>
+                        </a>
+                        <a href="https://discord.com/oauth2/authorize?client_id=1181289902558675026&permissions=8&scope=bot%20applications.commands" target="_blank" class="btn btn-outline btn-lg">
+                            <i class="ph ph-rocket-launch"></i>
+                            <span data-i18n="btn_invite_bot">Invitar Bot</span>
+                        </a>
+                    </div>
+                    <div class="hero-trust">
+                        <div class="metric-card">
+                            <span class="metric-label" data-i18n="landing_metric_1_label">Operaciones</span>
+                            <div class="metric-value" data-i18n="landing_metric_1_value">24/7</div>
+                            <p class="metric-copy" data-i18n="landing_metric_1_desc">Flujos de soporte estables con panel visual y acciones claras.</p>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label" data-i18n="landing_metric_2_label">Experiencia</span>
+                            <div class="metric-value" data-i18n="landing_metric_2_value">+UX</div>
+                            <p class="metric-copy" data-i18n="landing_metric_2_desc">Interfaz cuidada para admins, staff y futuros clientes.</p>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label" data-i18n="landing_metric_3_label">Control</span>
+                            <div class="metric-value" data-i18n="landing_metric_3_value">100%</div>
+                            <p class="metric-copy" data-i18n="landing_metric_3_desc">Configura tickets, formularios y paneles desde una sola capa.</p>
+                        </div>
+                    </div>
+                </article>
 
-        <!-- 3D Element Mock -->
-        <div style="margin-top: 4rem; position: relative; width: 100%; height: 200px; perspective: 1000px;">
-            <div style="position: absolute; left: 50%; top: 0; transform: translateX(-50%) rotateX(20deg); width: 80%; height: 300px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px 20px 0 0; backdrop-filter: blur(10px); box-shadow: 0 -20px 50px rgba(94, 92, 230, 0.1);">
-                <div style="padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px;">
-                    <div style="width: 12px; height: 12px; border-radius: 50%; background: #FF3B30;"></div>
-                    <div style="width: 12px; height: 12px; border-radius: 50%; background: #FFCC00;"></div>
-                    <div style="width: 12px; height: 12px; border-radius: 50%; background: #28CD41;"></div>
+                <aside class="hero-card hero-visual">
+                    <div class="visual-halo visual-halo-a" aria-hidden="true"></div>
+                    <div class="visual-halo visual-halo-b" aria-hidden="true"></div>
+                    <div class="terminal-window">
+                        <div class="terminal-topbar">
+                            <div class="window-controls" aria-hidden="true">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                            <span class="window-title" data-i18n="landing_visual_label">Live support system</span>
+                        </div>
+                        <div class="terminal-content">
+                            <div class="signal-band">
+                                <div class="signal-chip">
+                                    <strong data-i18n="landing_signal_1_title">Tickets inteligentes</strong>
+                                    <span data-i18n="landing_signal_1_desc">Categorias claras, panel personalizable y respuesta consistente.</span>
+                                </div>
+                                <div class="signal-chip">
+                                    <strong data-i18n="landing_signal_2_title">Formularios staff</strong>
+                                    <span data-i18n="landing_signal_2_desc">Acepta o rechaza postulaciones sin friccion operativa.</span>
+                                </div>
+                                <div class="signal-chip">
+                                    <strong data-i18n="landing_signal_3_title">Dashboard serio</strong>
+                                    <span data-i18n="landing_signal_3_desc">No es una plantilla vacia: es control real para comunidades.</span>
+                                </div>
+                            </div>
+
+                            <div class="dashboard-preview">
+                                <div class="preview-sidebar">
+                                    <div class="rail"></div>
+                                    <div class="rail"></div>
+                                    <div class="rail"></div>
+                                    <div class="rail"></div>
+                                </div>
+                                <div class="preview-main">
+                                    <div class="preview-header">
+                                        <div class="preview-title-block">
+                                            <div class="preview-line medium"></div>
+                                            <div class="preview-line short"></div>
+                                        </div>
+                                        <span class="preview-chip" data-i18n="landing_preview_chip">Realtime</span>
+                                    </div>
+                                    <div class="preview-stats">
+                                        <div class="mini-stat">
+                                            <strong>128</strong>
+                                            <span data-i18n="landing_preview_stat_1">Tickets resueltos</span>
+                                        </div>
+                                        <div class="mini-stat">
+                                            <strong>09</strong>
+                                            <span data-i18n="landing_preview_stat_2">Agentes activos</span>
+                                        </div>
+                                        <div class="mini-stat">
+                                            <strong>2.4m</strong>
+                                            <span data-i18n="landing_preview_stat_3">Tiempo medio</span>
+                                        </div>
+                                    </div>
+                                    <div class="preview-card">
+                                        <h3 data-i18n="landing_preview_title">Panel operativo con identidad propia</h3>
+                                        <p data-i18n="landing_preview_desc">Visualiza servidores, estado del panel, categorias y personalizacion del embed en un solo lugar con una interfaz mas elegante y creible.</p>
+                                    </div>
+                                    <div class="log-list">
+                                        <div class="log-row">
+                                            <div>
+                                                <strong data-i18n="landing_log_1_title">Nuevo ticket premium</strong>
+                                                <p data-i18n="landing_log_1_desc">Cliente redirigido al flujo correcto con contexto.</p>
+                                            </div>
+                                            <span class="log-status" data-i18n="landing_log_status_live">Live</span>
+                                        </div>
+                                        <div class="log-row">
+                                            <div>
+                                                <strong data-i18n="landing_log_2_title">Aplicacion revisada</strong>
+                                                <p data-i18n="landing_log_2_desc">Botones de aceptar y rechazar funcionando sin error.</p>
+                                            </div>
+                                            <span class="log-status" data-i18n="landing_log_status_synced">Synced</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <section class="section section-compact">
+            <div class="signal-marquee" aria-hidden="true">
+                <div class="signal-marquee-track">
+                    <span>PREMIUM SUPPORT</span>
+                    <span>DISCORD OPS</span>
+                    <span>APPLICATION FLOW</span>
+                    <span>CLIENT READY</span>
+                    <span>SMART TICKETS</span>
+                    <span>VISUAL IDENTITY</span>
+                    <span>PREMIUM SUPPORT</span>
+                    <span>DISCORD OPS</span>
+                    <span>APPLICATION FLOW</span>
+                    <span>CLIENT READY</span>
+                    <span>SMART TICKETS</span>
+                    <span>VISUAL IDENTITY</span>
                 </div>
             </div>
-        </div>
+        </section>
+
+        <section id="features" class="section">
+            <div class="section-head">
+                <span class="section-tag" data-i18n="landing_features_tag">Lo que hace diferente a Tenancy</span>
+                <h2 data-i18n="landing_features_title">Una presencia visual que transmite producto real, no una demo generica</h2>
+                <p data-i18n="landing_features_desc">La combinacion entre operativa, panel y presentacion importa. Si quieres vender calidad, la interfaz debe comunicarla en el primer vistazo.</p>
+            </div>
+            <div class="features-grid">
+                <article class="feature-card">
+                    <span class="feature-kicker" data-i18n="landing_feature_1_kicker">Impacto</span>
+                    <h3 data-i18n="landing_feature_1_title">Direccion de arte mas premium</h3>
+                    <p data-i18n="landing_feature_1_desc">Nueva paleta con contraste, profundidad, brillo controlado y superficies mas serias para inspirar confianza.</p>
+                    <div class="feature-points">
+                        <div class="feature-point">
+                            <strong data-i18n="landing_feature_1_point_1_title">Color system</strong>
+                            <span data-i18n="landing_feature_1_point_1_desc">Morados electricos, cyan tecnico y acentos verdes enfocados en conversion.</span>
+                        </div>
+                        <div class="feature-point">
+                            <strong data-i18n="landing_feature_1_point_2_title">Profundidad</strong>
+                            <span data-i18n="landing_feature_1_point_2_desc">Capas translucidas, glow sutil y volumen visual mejor trabajado.</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="feature-card">
+                    <span class="feature-kicker" data-i18n="landing_feature_2_kicker">Motion</span>
+                    <h3 data-i18n="landing_feature_2_title">Animaciones suaves y profesionales</h3>
+                    <p data-i18n="landing_feature_2_desc">Movimiento con criterio: entradas mas limpias, microinteracciones y ritmo visual sin saturar la experiencia.</p>
+                    <div class="feature-points">
+                        <div class="feature-point">
+                            <strong data-i18n="landing_feature_2_point_1_title">Microinteracciones</strong>
+                            <span data-i18n="landing_feature_2_point_1_desc">Botones, cards y paneles responden con mas vida y precision.</span>
+                        </div>
+                        <div class="feature-point">
+                            <strong data-i18n="landing_feature_2_point_2_title">Narrativa visual</strong>
+                            <span data-i18n="landing_feature_2_point_2_desc">La landing presenta el producto como una solucion premium, no como un panel improvisado.</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="feature-card">
+                    <span class="feature-kicker" data-i18n="landing_feature_3_kicker">Operacion</span>
+                    <h3 data-i18n="landing_feature_3_title">Flujo de formularios mas confiable</h3>
+                    <p data-i18n="landing_feature_3_desc">La capa visual mejora, pero tambien el backend del boton: aceptar y rechazar responde correctamente y sin “interaccion fallida”.</p>
+                    <div class="feature-points">
+                        <div class="feature-point">
+                            <strong data-i18n="landing_feature_3_point_1_title">Decision estable</strong>
+                            <span data-i18n="landing_feature_3_point_1_desc">El identificador del formulario se procesa de forma robusta incluso con ids complejas.</span>
+                        </div>
+                        <div class="feature-point">
+                            <strong data-i18n="landing_feature_3_point_2_title">Respuesta rapida</strong>
+                            <span data-i18n="landing_feature_3_point_2_desc">Discord recibe confirmacion a tiempo antes de tareas mas lentas como roles o mensajes privados.</span>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-head">
+                <span class="section-tag" data-i18n="landing_advantages_tag">Arquitectura de experiencia</span>
+                <h2 data-i18n="landing_advantages_title">Pensado para impresionar al cliente y facilitar el trabajo del staff</h2>
+                <p data-i18n="landing_advantages_desc">Desde la primera visita a la landing hasta la administracion diaria del dashboard, la sensacion ahora es mas premium, mas clara y mas profesional.</p>
+            </div>
+            <div class="surface-grid">
+                <article class="surface-card">
+                    <span class="surface-kicker" data-i18n="landing_advantage_1_kicker">Landing</span>
+                    <h3 data-i18n="landing_advantage_1_title">Mejor primera impresion</h3>
+                    <p data-i18n="landing_advantage_1_desc">Secciones mejor estructuradas, mensaje mas comercial y una presentacion visual con mas personalidad.</p>
+                </article>
+                <article class="surface-card">
+                    <span class="surface-kicker" data-i18n="landing_advantage_2_kicker">Dashboard</span>
+                    <h3 data-i18n="landing_advantage_2_title">Control con mas presencia</h3>
+                    <p data-i18n="landing_advantage_2_desc">El panel mantiene su funcionalidad, pero ahora se siente mas solido, mas moderno y mas vendible.</p>
+                </article>
+                <article class="surface-card">
+                    <span class="surface-kicker" data-i18n="landing_advantage_3_kicker">Discord</span>
+                    <h3 data-i18n="landing_advantage_3_title">Automatizacion que inspira confianza</h3>
+                    <p data-i18n="landing_advantage_3_desc">Los flujos del bot se perciben mas confiables cuando la UI y la logica ya no se contradicen.</p>
+                </article>
+            </div>
+        </section>
+
+        <section id="docs" class="section">
+            <div class="section-head">
+                <span class="section-tag" data-i18n="landing_docs_tag">Implementacion rapida</span>
+                <h2 data-i18n="landing_docs_title">Documentacion Rapida</h2>
+                <p data-i18n="landing_docs_subtitle">Aprende a configurar Tenancy en 3 pasos.</p>
+            </div>
+            <div class="docs-grid">
+                <article class="surface-card doc-step">
+                    <span class="doc-index">1</span>
+                    <h3 data-i18n="landing_step1_title">Invita al bot</h3>
+                    <p data-i18n="landing_step1_desc">Agrega el bot a tu servidor y dale permisos de Administrador para que pueda crear canales de tickets libremente.</p>
+                </article>
+                <article class="surface-card doc-step">
+                    <span class="doc-index">2</span>
+                    <h3 data-i18n="landing_step2_title">Roles y Canales</h3>
+                    <p data-i18n="landing_step2_desc">Entra al Panel Web y ve a Configuracion. Asigna que roles pueden atender tickets y donde se crearan los logs.</p>
+                </article>
+                <article class="surface-card doc-step">
+                    <span class="doc-index">3</span>
+                    <h3 data-i18n="landing_step3_title">Envia el Panel</h3>
+                    <p data-i18n="landing_step3_desc">Crea tus categorias y desde el panel web envia el embed a tu canal de soporte. Tus usuarios ya pueden abrir tickets.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="cta-panel hero-card">
+                <div class="cta-copy">
+                    <span class="inline-pill" data-i18n="landing_cta_tag">Listo para escalar tu soporte</span>
+                    <h2 data-i18n="landing_cta_title">Convierte tu servidor en una operacion con presencia premium</h2>
+                    <p data-i18n="landing_cta_desc">Invita el bot, entra al panel y empieza a presentar un sistema de tickets que se vea tan profesional como funciona.</p>
+                    <div class="cta-actions">
+                        <a href="/auth/discord" class="btn btn-primary">
+                            <i class="ph ph-layout"></i>
+                            <span data-i18n="nav_panel">Panel Web</span>
+                        </a>
+                        <a href="https://discord.com/oauth2/authorize?client_id=1181289902558675026&permissions=8&scope=bot%20applications.commands" target="_blank" class="btn btn-outline">
+                            <i class="ph ph-discord-logo"></i>
+                            <span data-i18n="nav_invite">Invitar Bot</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="cta-side">
+                    <div class="contact-chip">
+                        <i class="ph ph-graph"></i>
+                        <div>
+                            <strong data-i18n="landing_cta_card_1_title">Mas presencia visual</strong>
+                            <p data-i18n="landing_cta_card_1_desc">Landing y dashboard con una direccion creativa mucho mas coherente.</p>
+                        </div>
+                    </div>
+                    <div class="contact-chip">
+                        <i class="ph ph-shield-check"></i>
+                        <div>
+                            <strong data-i18n="landing_cta_card_2_title">Menos friccion operativa</strong>
+                            <p data-i18n="landing_cta_card_2_desc">Acepta y rechaza formularios desde Discord con una interaccion estable.</p>
+                        </div>
+                    </div>
+                    <div class="contact-chip">
+                        <i class="ph ph-lightning"></i>
+                        <div>
+                            <strong data-i18n="landing_cta_card_3_title">Mas conversion</strong>
+                            <p data-i18n="landing_cta_card_3_desc">Una UI mas cuidada transmite mas valor a futuros clientes.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
-
-
-    <!-- ═══ SECCIÓN DOCS ═══ -->
-    <section id="docs" style="width: 100%; max-width: 1000px; padding: 4rem 2rem; margin: 0 auto; margin-bottom: 4rem;">
-        <div class="view-header" style="text-align: center; margin-bottom: 3rem;">
-            <h2 style="font-size: 2.5rem;" data-i18n="landing_docs_title">Documentación Rápida</h2>
-            <p class="view-subtitle" data-i18n="landing_docs_subtitle">Aprende a configurar Tenancy en 3 pasos.</p>
+    <footer class="footer">
+        <div class="footer-inner" data-i18n="landing_footer">
+            Tenancy Bot © 2026. Todos los derechos reservados.
         </div>
-        <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
-            <div class="stat-card">
-                <h3 style="margin-bottom: 1rem;"><span style="color: var(--accent-blue);">1.</span> <span data-i18n="landing_step1_title">Invita al bot</span></h3>
-                <p class="text-muted" style="font-size: 0.9rem;" data-i18n="landing_step1_desc">Agrega el bot a tu servidor y dale permisos de Administrador para que pueda crear canales de tickets libremente.</p>
-            </div>
-            <div class="stat-card">
-                <h3 style="margin-bottom: 1rem;"><span style="color: var(--accent-purple);">2.</span> <span data-i18n="landing_step2_title">Roles y Canales</span></h3>
-                <p class="text-muted" style="font-size: 0.9rem;" data-i18n="landing_step2_desc">Entra al Panel Web y ve a Configuración. Asigna qué roles pueden atender tickets y dónde se crearán los logs.</p>
-            </div>
-            <div class="stat-card">
-                <h3 style="margin-bottom: 1rem;"><span style="color: var(--accent-green);">3.</span> <span data-i18n="landing_step3_title">Envía el Panel</span></h3>
-                <p class="text-muted" style="font-size: 0.9rem;" data-i18n="landing_step3_desc">Crea tus categorías y desde el panel web envía el Embed a tu canal de soporte. ¡Tus usuarios ya pueden abrir tickets!</p>
-            </div>
-        </div>
-    </section>
-
-    <footer style="text-align: center; padding: 2rem; border-top: var(--border-glass); color: var(--text-muted); font-size: 0.9rem;" data-i18n="landing_footer">
-        Tenancy Bot &copy; 2026. Todos los derechos reservados.
     </footer>
 
     <script src="/js/i18n-web.js"></script>
