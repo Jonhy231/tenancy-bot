@@ -1,13 +1,12 @@
 import { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from "discord.js";
 import { getGuildConfig } from "../../database/cache.js";
 
-export default {
-    data: new SlashCommandBuilder()
-        .setName("panel-aplicaciones")
-        .setDescription("Envía el panel para postularse al staff (Solo Admins).")
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+export const data = new SlashCommandBuilder()
+    .setName("panel-aplicaciones")
+    .setDescription("Envía el panel para postularse al staff (Solo Admins).")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
-    async execute(interaction) {
+export async function execute(interaction) {
         const guildConfig = await getGuildConfig(interaction.guildId);
 
         if (!guildConfig.applications || guildConfig.applications.length === 0) {
@@ -39,5 +38,4 @@ export default {
             content: "✅ Panel de aplicaciones enviado.",
             flags: [MessageFlags.Ephemeral]
         });
-    }
-};
+}
