@@ -1,5 +1,5 @@
 import { InteractionType, MessageFlags } from "discord.js";
-import { handleTicketSelect, handleTicketModal, handleTicketButton, handleAddUserModal } from "../handlers/ticketHandler.js";
+import { handleTicketSelect, handleTicketModal, handleTicketCategoryButton, handleTicketManageButton, handleAddUserModal } from "../handlers/ticketHandler.js";
 import { handleApplicationButton, handleApplicationModal, handleApplicationDecision } from "../handlers/applicationHandler.js";
 import Ticket from "../../database/models/Ticket.js";
 import { getGuildConfig } from "../../database/cache.js";
@@ -16,8 +16,8 @@ export async function handleInteraction(interaction) {
         } catch (error) {
             console.error(`❌ Error en /${interaction.commandName}:`, error);
             const reply = { content: "❌ Ocurrió un error.", flags: [MessageFlags.Ephemeral] };
-            if (interaction.replied || interaction.deferred) await interaction.followUp(reply).catch(() => {});
-            else await interaction.reply(reply).catch(() => {});
+            if (interaction.replied || interaction.deferred) await interaction.followUp(reply).catch(() => { });
+            else await interaction.reply(reply).catch(() => { });
         }
         return;
     }
@@ -50,16 +50,16 @@ export async function handleInteraction(interaction) {
     if (interaction.isButton()) {
         // Ticket Category Buttons (panel)
         if (interaction.customId.startsWith("ticket_cat_")) {
-            await handleTicketButton(interaction);
+            await handleTicketCategoryButton(interaction); // <--- CAMBIO AQUÍ
             return;
         }
 
         // Tickets Management
         if (["ticket_close", "ticket_claim", "ticket_add"].some(a => interaction.customId.startsWith(a))) {
-            await handleTicketButton(interaction);
+            await handleTicketManageButton(interaction); // <--- CAMBIO AQUÍ
             return;
         }
-        
+
         // Appplication Start
         if (interaction.customId.startsWith("app_start_")) {
             await handleApplicationButton(interaction);
@@ -93,9 +93,8 @@ export async function handleInteraction(interaction) {
                 } else {
                     await interaction.update({ content: "Error", embeds: [], components: [] });
                 }
-            } catch(e) {}
+            } catch (e) { }
             return;
         }
     }
 }
-
