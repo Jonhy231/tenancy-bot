@@ -76,6 +76,62 @@ export async function handleTicketSelect(interaction) {
     } catch (_) { }
 }
 
+
+// ══════════════════════════════════════════════════════
+// 1b. HANDLER: Botón de Categoría → Muestra Modal
+// ══════════════════════════════════════════════════════
+
+export async function handleTicketButton(interaction) {
+    const guildConfig = await getGuildConfig(interaction.guildId);
+    const categoryId = interaction.customId.replace("ticket_cat_", "");
+    const lang = guildConfig.language || "es";
+
+    if (guildConfig.bannedUsers.includes(interaction.user.id)) {
+        return interaction.reply({
+            content: t(lang, "TICKET_BANNED"),
+            flags: [MessageFlags.Ephemeral],
+        });
+    }
+
+    if (!guildConfig.isPremium && guildConfig.totalTicketsCreated >= 50) {
+        return interaction.reply({
+            content: t(lang, "TICKET_LIMIT_REACHED"),
+            flags: [MessageFlags.Ephemeral],
+        });
+    }
+
+    const existingTicket = await Ticket.findOne({
+        guildId: interaction.guildId,
+        userId: interaction.user.id,
+        status: "open",
+    });
+
+    if (existingTicket) {
+        return interaction.reply({
+            content: t(lang, "TICKET_ALREADY_OPEN", { channel: `<#${existingTicket.channelId}>` }),
+            flags: [MessageFlags.Ephemeral],
+        });
+    }
+
+    const category = guildConfig.categories.find(c => c.id === categoryId);
+    const categoryName = category ? category.name : "General";
+
+    const modal = new ModalBuilder()
+        .setCustomId(`ticket_modal_${categoryId}`)
+        .setTitle(t(lang, "TICKET_MODAL_TITLE", { category: categoryName }).substring(0, 45));
+
+    const subjectInput = new TextInputBuilder()
+        .setCustomId("ticket_subject")
+        .setLabel(t(lang, "TICKET_MODAL_SUBJECT"))
+        .setPlaceholder(t(lang, "TICKET_MODAL_SUBJECT_PLACEHOLDER"))
+        .setStyle(TextInputStyle.Paragraph)
+        .setMaxLength(500)
+        .setRequired(true);
+
+    modal.addComponents(new ActionRowBuilder().addComponents(subjectInput));
+    await interaction.showModal(modal);
+}
+
 // ══════════════════════════════════════════════════════
 // 2. HANDLER: Modal Submit → Crea Canal de Ticket
 // ══════════════════════════════════════════════════════

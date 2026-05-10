@@ -8,8 +8,6 @@ import Guild from "../database/models/Guild.js";
 import {
     EmbedBuilder,
     ActionRowBuilder,
-    StringSelectMenuBuilder,
-    StringSelectMenuOptionBuilder,
     ButtonBuilder,
     ButtonStyle,
     ChannelType,
@@ -497,39 +495,27 @@ export function startDashboard(client) {
                 embed.setFooter({ text: "⚡ Powered by Tenancy" });
             }
 
-            // ═══ Fields del Embed ═══
-            if (Array.isArray(panel.fields) && panel.fields.length > 0) {
-                const embedFields = panel.fields
-                    .filter(f => f && (f.name || f.value))
-                    .slice(0, 25)
-                    .map(f => ({
-                        name: f.name || "\u200b",
-                        value: f.value || "\u200b",
-                        inline: f.inline === true,
-                    }));
-                if (embedFields.length > 0) embed.addFields(embedFields);
+            // ═══ Construir Botones por Categoría ═══
+            const rows = [];
+            for (let i = 0; i < config.categories.length; i += 5) {
+                const row = new ActionRowBuilder();
+                const chunk = config.categories.slice(i, i + 5);
+                for (const cat of chunk) {
+                    const btn = new ButtonBuilder()
+                        .setCustomId(`ticket_cat_${cat.id}`)
+                        .setLabel(cat.name.slice(0, 80))
+                        .setStyle(ButtonStyle.Secondary);
+                    if (cat.emoji) {
+                        try { btn.setEmoji(cat.emoji); } catch (_) {}
+                    }
+                    row.addComponents(btn);
+                }
+                rows.push(row);
             }
-
-            // ═══ Construir Select Menu ═══
-            const selectMenu = new StringSelectMenuBuilder()
-                .setCustomId("ticket_category_select")
-                .setPlaceholder("📂 Selecciona una categoría...");
-
-            for (const cat of config.categories) {
-                const option = new StringSelectMenuOptionBuilder()
-                    .setLabel(cat.name)
-                    .setValue(cat.id)
-                    .setDescription(cat.description || "Soporte");
-
-                if (cat.emoji) option.setEmoji(cat.emoji);
-                selectMenu.addOptions(option);
-            }
-
-            const row = new ActionRowBuilder().addComponents(selectMenu);
 
             const messagePayload = {
                 embeds: [embed],
-                components: [row],
+                components: rows,
             };
 
             // ═══ Enviar o Editar ═══

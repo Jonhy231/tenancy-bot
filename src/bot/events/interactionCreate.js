@@ -48,6 +48,12 @@ export async function handleInteraction(interaction) {
 
     // ═══ 4. Botones ═══
     if (interaction.isButton()) {
+        // Ticket Category Buttons (panel)
+        if (interaction.customId.startsWith("ticket_cat_")) {
+            await handleTicketButton(interaction);
+            return;
+        }
+
         // Tickets Management
         if (["ticket_close", "ticket_claim", "ticket_add"].some(a => interaction.customId.startsWith(a))) {
             await handleTicketButton(interaction);
