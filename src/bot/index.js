@@ -4,6 +4,7 @@ import { connectDB } from "../database/connection.js";
 import { setupEvents } from "./events/ready.js";
 import { loadCommands } from "./handlers/commandLoader.js";
 import { startDashboard } from "../dashboard/server.js";
+import { startHealthServer } from "./healthcheck.js";
 
 const client = new Client({
     intents: [
@@ -30,6 +31,9 @@ async function main() {
 
     // 5. Iniciar dashboard web (después del login)
     startDashboard(client);
+
+    // 6. Servidor HTTP de healthcheck para Railway
+    startHealthServer(client);
 }
 
 main().catch((err) => {
