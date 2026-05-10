@@ -86,11 +86,13 @@
 
             <!-- ═══ Selector de Servidores ═══ -->
             <div id="serverSelectorView" class="view server-selector-view" style="display:none; position: relative;">
-                <button id="devSelectorBtn" class="btn"
-                    style="display:none; position: absolute; top: 0; right: 0; background: rgba(255,0,255,0.1); border: 1px solid #ff00ff; color: #ff00ff;"
-                    onclick="showDevTerminalGlobal()">
-                    <i class="ph ph-code" style="font-size: 1.2rem; margin-right: 5px;"></i> <span data-i18n="sidebar_dev">DEV_TERMINAL</span>
-                </button>
+                <div class="server-selector-toolbar">
+                    <button id="devSelectorBtn" class="btn dev-selector-btn"
+                        style="display:none;"
+                        onclick="showDevTerminalGlobal()">
+                        <i class="ph ph-code" style="font-size: 1.2rem; margin-right: 5px;"></i> <span data-i18n="sidebar_dev">DEV_TERMINAL</span>
+                    </button>
+                </div>
                 <div class="view-header server-selector-hero" style="text-align: center; margin-bottom: 3rem;">
                     <h1 data-i18n="dashboard_server_selector_title">Selector de Servidores</h1>
                     <p class="view-subtitle" data-i18n="dashboard_server_selector_subtitle">Selecciona un servidor para gestionar Tenancy o invita al bot a uno nuevo.

@@ -594,8 +594,14 @@ export function startDashboard(client) {
                 return res.status(400).json({ error: "Discord solo permite 25 botones por mensaje. Reduce el número de formularios." });
             }
 
-            const channel = guild.channels.cache.get(channelId);
-            if (!channel) return res.status(404).json({ error: "No se encontró el canal de destino en el servidor" });
+            const channel = await guild.channels.fetch(channelId).catch(() => null);
+            if (!channel) {
+                return res.status(404).json({ error: "No se encontró el canal de destino en el servidor" });
+            }
+
+            if (!channel.isTextBased() || typeof channel.send !== "function") {
+                return res.status(400).json({ error: "El canal seleccionado no admite mensajes normales. Usa un canal de texto." });
+            }
 
             const embed = new EmbedBuilder()
                 .setColor(0x5865F2)
@@ -620,7 +626,7 @@ export function startDashboard(client) {
             let messageId = config.applicationsPanelMessageId;
             let action = "enviado";
 
-            if (messageId) {
+            if (messageId && config.applicationsPanelChannelId === channelId) {
                 try {
                     const existingMessage = await channel.messages.fetch(messageId);
                     await existingMessage.edit(messagePayload);
@@ -628,6 +634,8 @@ export function startDashboard(client) {
                 } catch (_) {
                     messageId = null;
                 }
+            } else {
+                messageId = null;
             }
 
             if (!messageId) {
@@ -648,7 +656,7 @@ export function startDashboard(client) {
             });
         } catch (error) {
             console.error("❌ Error al enviar panel de aplicaciones:", error);
-            res.status(500).json({ error: "Error al enviar el panel" });
+            res.status(500).json({ error: "Error al enviar el panel de aplicaciones. Verifica que el bot pueda ver y enviar mensajes en ese canal." });
         }
     });
 
