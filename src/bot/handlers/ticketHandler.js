@@ -78,10 +78,10 @@ export async function handleTicketSelect(interaction) {
 
 
 // ══════════════════════════════════════════════════════
-// 1b. HANDLER: Botón de Categoría → Muestra Modal
+// 1b. HANDLER: Botón de Categoría → Muestra Modal (NOMBRE CAMBIADO)
 // ══════════════════════════════════════════════════════
 
-export async function handleTicketButton(interaction) {
+export async function handleTicketCategoryButton(interaction) { // <--- CAMBIO AQUÍ
     const guildConfig = await getGuildConfig(interaction.guildId);
     const categoryId = interaction.customId.replace("ticket_cat_", "");
     const lang = guildConfig.language || "es";
@@ -150,9 +150,9 @@ export async function handleTicketModal(interaction) {
 
     const newCount = (guildConfig.ticketCounter || 0) + 1;
     const newTotal = (guildConfig.totalTicketsCreated || 0) + 1;
-    await updateGuildConfig(interaction.guildId, { 
+    await updateGuildConfig(interaction.guildId, {
         ticketCounter: newCount,
-        totalTicketsCreated: newTotal 
+        totalTicketsCreated: newTotal
     });
 
     const ticketName = `${categoryEmoji}┃ticket-${String(newCount).padStart(4, "0")}`;
@@ -275,10 +275,10 @@ export async function handleTicketModal(interaction) {
 }
 
 // ══════════════════════════════════════════════════════
-// 3. HANDLER: Botones de Gestión
+// 3. HANDLER: Botones de Gestión (NOMBRE CAMBIADO)
 // ══════════════════════════════════════════════════════
 
-export async function handleTicketButton(interaction) {
+export async function handleTicketManageButton(interaction) { // <--- CAMBIO AQUÍ
     const action = interaction.customId;
 
     switch (action) {
