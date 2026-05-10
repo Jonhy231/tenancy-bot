@@ -1,15 +1,13 @@
 import { InteractionType, MessageFlags } from "discord.js";
 import { handleTicketSelect, handleTicketModal, handleTicketButton, handleAddUserModal } from "../handlers/ticketHandler.js";
+import { handleApplicationButton, handleApplicationModal, handleApplicationDecision } from "../handlers/applicationHandler.js";
+import Ticket from "../../database/models/Ticket.js";
+import { getGuildConfig } from "../../database/cache.js";
+import { t } from "../utils/i18n.js";
 
-/**
- * Router central de interacciones.
- * Distribuye cada tipo de interacción al handler correspondiente.
- * Nota: La configuración del bot se gestiona exclusivamente desde el dashboard web.
- *       Los comandos /embed y /anuncio se manejan aquí.
- */
 export async function handleInteraction(interaction) {
 
-    // ═══ 1. Slash Commands (/embed, /anuncio) ═══
+    // ═══ 1. Slash Commands ═══
     if (interaction.isChatInputCommand()) {
         const command = interaction.client.commands.get(interaction.commandName);
         if (!command) return;
@@ -17,17 +15,14 @@ export async function handleInteraction(interaction) {
             await command.execute(interaction);
         } catch (error) {
             console.error(`❌ Error en /${interaction.commandName}:`, error);
-            const reply = { content: "❌ Ocurrió un error al ejecutar el comando.", flags: MessageFlags.Ephemeral };
-            if (interaction.replied || interaction.deferred) {
-                await interaction.followUp(reply).catch(() => {});
-            } else {
-                await interaction.reply(reply).catch(() => {});
-            }
+            const reply = { content: "❌ Ocurrió un error.", flags: [MessageFlags.Ephemeral] };
+            if (interaction.replied || interaction.deferred) await interaction.followUp(reply).catch(() => {});
+            else await interaction.reply(reply).catch(() => {});
         }
         return;
     }
 
-    // ═══ 2. Select Menus (Selección de categoría de ticket) ═══
+    // ═══ 2. Select Menus ═══
     if (interaction.isStringSelectMenu()) {
         if (interaction.customId === "ticket_category_select") {
             await handleTicketSelect(interaction);
@@ -37,25 +32,64 @@ export async function handleInteraction(interaction) {
 
     // ═══ 3. Modales ═══
     if (interaction.type === InteractionType.ModalSubmit) {
-        // Modal de asunto de ticket
         if (interaction.customId.startsWith("ticket_modal_") && interaction.customId !== "ticket_modal_adduser") {
             await handleTicketModal(interaction);
             return;
         }
-        // Modal de añadir usuario
         if (interaction.customId === "ticket_modal_adduser") {
             await handleAddUserModal(interaction);
             return;
         }
+        if (interaction.customId.startsWith("app_modal_")) {
+            await handleApplicationModal(interaction);
+            return;
+        }
     }
 
-    // ═══ 4. Botones (tickets — los botones de embed/anuncio usan collectors internos) ═══
+    // ═══ 4. Botones ═══
     if (interaction.isButton()) {
-        const buttonActions = ["ticket_close", "ticket_claim", "ticket_add"];
-        const action = buttonActions.find(a => interaction.customId.startsWith(a));
-        if (action) {
+        // Tickets Management
+        if (["ticket_close", "ticket_claim", "ticket_add"].some(a => interaction.customId.startsWith(a))) {
             await handleTicketButton(interaction);
+            return;
+        }
+        
+        // Appplication Start
+        if (interaction.customId.startsWith("app_start_")) {
+            await handleApplicationButton(interaction);
+            return;
+        }
+
+        // Application Decision
+        if (interaction.customId.startsWith("app_accept_") || interaction.customId.startsWith("app_deny_")) {
+            await handleApplicationDecision(interaction);
+            return;
+        }
+
+        // Ticket Rating via DM
+        if (interaction.customId.startsWith("ticket_rate_")) {
+            // format: ticket_rate_STARS_channelId
+            const parts = interaction.customId.split("_");
+            const stars = parseInt(parts[2]);
+            const channelId = parts[3];
+
+            try {
+                const ticket = await Ticket.findOne({ channelId });
+                if (ticket) {
+                    await Ticket.updateOne({ _id: ticket._id }, { rating: stars });
+                    const guildConfig = await getGuildConfig(ticket.guildId);
+                    const lang = guildConfig.language || "es";
+                    await interaction.update({
+                        content: t(lang, "RATE_THANKS", { stars }),
+                        embeds: [],
+                        components: []
+                    });
+                } else {
+                    await interaction.update({ content: "Error", embeds: [], components: [] });
+                }
+            } catch(e) {}
             return;
         }
     }
 }
+

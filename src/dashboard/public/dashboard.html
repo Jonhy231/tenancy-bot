@@ -50,6 +50,10 @@
                     <span class="nav-icon"><i class="ph ph-paint-brush-broad"></i></span>
                     <span>UI_OVERRIDE</span>
                 </a>
+                <a href="#" class="nav-item" data-view="applications">
+                    <span class="nav-icon"><i class="ph ph-files"></i></span>
+                    <span>APPLIC_SYS</span>
+                </a>
                 <a href="#" class="nav-item" id="devNavBtn" data-view="devTerminal" style="display:none; color: var(--neon-magenta);">
                     <span class="nav-icon"><i class="ph ph-code"></i></span>
                     <span>DEV_TERMINAL</span>
@@ -186,6 +190,24 @@
                     <p class="view-subtitle">PARÁMETROS DE INSTANCIA LOCAL</p>
                 </div>
                 <div class="config-grid">
+
+                    <!-- ═══ Opciones Generales ═══ -->
+                    <div class="card config-full-width">
+                        <div class="card-header">
+                            <h2>🌐 Opciones Generales</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="botLanguageSelect">Idioma del Bot (i18n)</label>
+                                <p class="text-muted text-sm" style="margin-bottom:8px;">Cambia el idioma de los comandos, modales y mensajes.</p>
+                                <select id="botLanguageSelect" class="form-input" style="max-width: 300px;">
+                                    <option value="es">Español (ES)</option>
+                                    <option value="en">English (EN)</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" id="saveGeneralBtn">💾 Guardar General</button>
+                        </div>
+                    </div>
 
                     <!-- ═══ Roles de Staff ═══ -->
                     <div class="card">
@@ -376,6 +398,40 @@
                 </div>
             </div>
 
+            <!-- ═══ VISTA: Aplicaciones ═══ -->
+            <div id="applicationsView" class="view" style="display:none;">
+                <div class="view-header">
+                    <h1><i class="ph ph-files"></i> APPLIC_SYS <span class="cursor-blink"></span></h1>
+                    <p class="view-subtitle">FORMULARIOS DE STAFF</p>
+                </div>
+                
+                <div class="card config-full-width">
+                    <div class="card-header">
+                        <h2>📁 Canal de Aplicaciones</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="appChannelSelect">Canal para recibir formularios</label>
+                            <p class="text-muted text-sm" style="margin-bottom:8px;">Canal privado donde los Admins verán y aceptarán/rechazarán aplicaciones</p>
+                            <select id="appChannelSelect" class="form-input" style="max-width: 300px;">
+                                <option value="">Seleccionar canal...</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" id="saveAppChannelBtn">💾 Guardar Canal</button>
+                    </div>
+                </div>
+
+                <div class="card config-full-width">
+                    <div class="card-header">
+                        <h2>📋 Formularios Creados</h2>
+                        <button class="btn btn-sm btn-primary" id="addAppBtn">+ Nuevo Formulario</button>
+                    </div>
+                    <div class="card-body" id="applicationsList">
+                        <!-- Llenado por JS -->
+                    </div>
+                </div>
+            </div>
+
             <!-- ═══ VISTA SECRETA: Dev Terminal ═══ -->
             <div id="devTerminalView" class="view" style="display:none;">
                 <div class="view-header">
@@ -431,6 +487,41 @@
             <div class="modal-footer">
                 <button class="btn btn-outline" id="cancelCategory">Cancelar</button>
                 <button class="btn btn-primary" id="saveCategory">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ Modal: Añadir Aplicación ═══ -->
+    <div class="modal-overlay" id="appModal" style="display:none;">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>📋 Nuevo Formulario</h3>
+                <button class="modal-close" id="closeAppModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="appName">Nombre del Puesto (Ej: Moderador)</label>
+                    <input type="text" id="appName" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="appRoleToGive">Rol a otorgar si es Aceptado</label>
+                    <select id="appRoleToGive" class="form-input">
+                        <option value="">Ninguno</option>
+                    </select>
+                </div>
+                <hr style="border:0; border-bottom: 1px solid var(--border-glass); margin: 1.5rem 0;">
+                <h4 style="margin-bottom: 1rem;">Preguntas (Max 5)</h4>
+                <div id="appQuestionsContainer" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <input type="text" class="form-input app-question-input" placeholder="Pregunta 1 (Ej: ¿Edad?)">
+                    <input type="text" class="form-input app-question-input" placeholder="Pregunta 2 (Opcional)">
+                    <input type="text" class="form-input app-question-input" placeholder="Pregunta 3 (Opcional)">
+                    <input type="text" class="form-input app-question-input" placeholder="Pregunta 4 (Opcional)">
+                    <input type="text" class="form-input app-question-input" placeholder="Pregunta 5 (Opcional)">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancelApp">Cancelar</button>
+                <button class="btn btn-primary" id="saveApp">Guardar</button>
             </div>
         </div>
     </div>

@@ -143,6 +143,27 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         });
     }
+    // Eventos: opciones generales
+    const saveGeneralBtn = document.getElementById("saveGeneralBtn");
+    if (saveGeneralBtn) saveGeneralBtn.addEventListener("click", saveGeneralConfig);
+
+    // Eventos: aplicaciones
+    const addAppBtn = document.getElementById("addAppBtn");
+    if (addAppBtn) {
+        addAppBtn.addEventListener("click", () => {
+            document.getElementById("appModal").style.display = "flex";
+        });
+    }
+    const closeAppModalBtn = document.getElementById("closeAppModal");
+    if (closeAppModalBtn) closeAppModalBtn.addEventListener("click", closeAppModal);
+    const cancelAppBtn = document.getElementById("cancelApp");
+    if (cancelAppBtn) cancelAppBtn.addEventListener("click", closeAppModal);
+    const saveAppBtn = document.getElementById("saveApp");
+    if (saveAppBtn) saveAppBtn.addEventListener("click", saveApplication);
+    
+    const saveAppChannelBtn = document.getElementById("saveAppChannelBtn");
+    if (saveAppChannelBtn) saveAppChannelBtn.addEventListener("click", saveAppChannelConfig);
+
 });
 
 // ═══ Cargar Servidores ═══
@@ -248,6 +269,13 @@ function populateDashboard(data) {
     selectedDashboardRoles = [...(data.config.dashboardRoles || [])];
     populateRoleSelectors();
     renderRoleTags();
+
+    // Config: Opciones Generales (i18n)
+    const langSelect = document.getElementById("botLanguageSelect");
+    if (langSelect) langSelect.value = data.config.language || "es";
+
+    // Config: Aplicaciones
+    renderApplications(data.config.applications);
 
     // Seguridad: Ocultar selectores sensibles si no es admin nativo
     if (data.guild.isNativeAdmin) {
@@ -400,6 +428,21 @@ function populateChannelSelectors(config) {
         textOptions.map(c =>
             `<option value="${c.id}" ${config.panelChannelId === c.id ? "selected" : ""}>${c.label}</option>`
         ).join("");
+        
+    const appSelect = document.getElementById("appChannelSelect");
+    if (appSelect) {
+        appSelect.innerHTML = '<option value="">Seleccionar canal...</option>' +
+            textOptions.map(c =>
+                `<option value="${c.id}" ${config.applicationsChannelId === c.id ? "selected" : ""}>${c.label}</option>`
+            ).join("");
+    }
+    
+    // Poblar roles para aplicaciones
+    const appRoleSelect = document.getElementById("appRoleToGive");
+    if (appRoleSelect) {
+        appRoleSelect.innerHTML = '<option value="">Ninguno</option>' +
+            guildRoles.map(r => `<option value="${r.id}" style="color:${r.color}">${r.name}</option>`).join("");
+    }
 }
 
 // ══════════════════════════════════════════
@@ -474,6 +517,33 @@ async function sendPanel() {
         btn.disabled = false;
         content.style.display = "inline-flex";
         loader.style.display = "none";
+    }
+}
+
+// ══════════════════════════════════════════
+// GUARDAR: General e Idioma
+// ══════════════════════════════════════════
+
+async function saveGeneralConfig() {
+    const btn = document.getElementById("saveGeneralBtn");
+    btn.disabled = true;
+    btn.textContent = "Guardando...";
+
+    try {
+        const res = await fetch(`/api/server/${currentGuildId}/config`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                language: document.getElementById("botLanguageSelect").value
+            }),
+        });
+        if (!res.ok) throw new Error();
+        toast("✅ Opciones generales guardadas");
+    } catch {
+        toast("Error al guardar opciones generales", "error");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "💾 Guardar General";
     }
 }
 
@@ -640,6 +710,112 @@ window.deleteCategory = async function(catId) {
         await loadServerData(currentGuildId);
     } catch { toast("Error al eliminar", "error"); }
 };
+
+// ═══ Render: Aplicaciones ═══
+function renderApplications(applications) {
+    const container = document.getElementById("applicationsList");
+    if (!container) return;
+    if (!applications || !applications.length) {
+        container.innerHTML = '<p class="text-muted">No hay formularios creados. Usa el botón + para añadir uno.</p>';
+        return;
+    }
+    container.innerHTML = applications.map(a => `
+        <div class="category-item" style="border: 1px solid var(--border-glass); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2);">
+            <div class="category-info">
+                <div>
+                    <div class="category-name" style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.25rem;">${a.name}</div>
+                    <div class="category-desc" style="font-size: 0.9rem; color: var(--text-muted);">
+                        ${a.questions.length} preguntas • Rol: ${a.roleToGive ? 'Asignado' : 'Ninguno'}
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-sm btn-danger" onclick="deleteApplication('${a.id}')">🗑️</button>
+        </div>
+    `).join("");
+}
+
+function closeAppModal() {
+    document.getElementById("appModal").style.display = "none";
+    document.getElementById("appName").value = "";
+    document.getElementById("appRoleToGive").value = "";
+    document.querySelectorAll(".app-question-input").forEach(i => i.value = "");
+}
+
+async function saveApplication() {
+    const name = document.getElementById("appName").value.trim();
+    if (!name) return toast("El nombre es obligatorio", "error");
+
+    const questions = Array.from(document.querySelectorAll(".app-question-input"))
+        .map(i => i.value.trim())
+        .filter(q => q !== "");
+
+    if (questions.length === 0) return toast("Añade al menos 1 pregunta", "error");
+
+    const roleToGive = document.getElementById("appRoleToGive").value;
+    const appId = "app_" + Date.now();
+
+    const newApp = { id: appId, name, questions, roleToGive };
+    
+    // We get the current applications and append the new one via PATCH
+    const currentApps = serverData.config.applications || [];
+    currentApps.push(newApp);
+
+    try {
+        const res = await fetch(`/api/server/${currentGuildId}/config`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ applications: currentApps }),
+        });
+        if (!res.ok) throw new Error();
+        toast("✅ Formulario creado");
+        closeAppModal();
+        await loadServerData(currentGuildId);
+    } catch {
+        toast("Error al guardar formulario", "error");
+    }
+}
+
+window.deleteApplication = async function(appId) {
+    if (!confirm("¿Eliminar este formulario?")) return;
+    const currentApps = serverData.config.applications || [];
+    const newApps = currentApps.filter(a => a.id !== appId);
+
+    try {
+        const res = await fetch(`/api/server/${currentGuildId}/config`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ applications: newApps }),
+        });
+        if (!res.ok) throw new Error();
+        toast("🗑️ Formulario eliminado");
+        await loadServerData(currentGuildId);
+    } catch {
+        toast("Error al eliminar", "error");
+    }
+};
+
+async function saveAppChannelConfig() {
+    const btn = document.getElementById("saveAppChannelBtn");
+    btn.disabled = true;
+    btn.textContent = "Guardando...";
+
+    try {
+        const res = await fetch(`/api/server/${currentGuildId}/config`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                applicationsChannelId: document.getElementById("appChannelSelect").value,
+            }),
+        });
+        if (!res.ok) throw new Error();
+        toast("✅ Canal de aplicaciones guardado");
+    } catch {
+        toast("Error al guardar", "error");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "💾 Guardar Canal";
+    }
+}
 
 // ═══ Guardar Personalización ═══
 async function saveCustomization() {

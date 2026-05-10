@@ -54,6 +54,18 @@ const guildSchema = new mongoose.Schema({
     totalTicketsCreated: { type: Number, default: 0 },
     isPremium: { type: Boolean, default: false },
 
+    // ═══ Internacionalización ═══
+    language: { type: String, enum: ["es", "en"], default: "es" },
+
+    // ═══ Sistema de Aplicaciones ═══
+    applicationsChannelId: { type: String, default: "" },
+    applications: [{
+        id: { type: String },
+        name: { type: String },
+        questions: [{ type: String }], // Hasta 5 preguntas
+        roleToGive: { type: String, default: "" }
+    }],
+
 }, { timestamps: true });
 
 export default mongoose.model("Guild", guildSchema);

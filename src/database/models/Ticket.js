@@ -27,6 +27,10 @@ const ticketSchema = new mongoose.Schema({
     // ═══ Participantes adicionales ═══
     addedUsers: [{ type: String }],
 
+    // ═══ Reseñas (Reviews) ═══
+    rating: { type: Number, default: null }, // 1 al 5
+    reviewText: { type: String, default: "" },
+
 }, { timestamps: true });
 
 // Índice compuesto para queries eficientes multi-tenant

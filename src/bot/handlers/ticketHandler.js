@@ -13,6 +13,7 @@ import {
 import { getGuildConfig, updateGuildConfig } from "../../database/cache.js";
 import Ticket from "../../database/models/Ticket.js";
 import discordTranscripts from "discord-html-transcripts";
+import { t } from "../utils/i18n.js";
 
 // ══════════════════════════════════════════════════════
 // 1. HANDLER: Select Menu → Muestra Modal
@@ -21,24 +22,22 @@ import discordTranscripts from "discord-html-transcripts";
 export async function handleTicketSelect(interaction) {
     const guildConfig = await getGuildConfig(interaction.guildId);
     const categoryId = interaction.values[0];
+    const lang = guildConfig.language || "es";
 
-    // Verificar si el usuario está baneado de tickets
     if (guildConfig.bannedUsers.includes(interaction.user.id)) {
         return interaction.reply({
-            content: "❌ No tienes permitido abrir tickets en este servidor.",
+            content: t(lang, "TICKET_BANNED"),
             flags: [MessageFlags.Ephemeral],
         });
     }
 
-    // Verificar Límite Gratuito
     if (!guildConfig.isPremium && guildConfig.totalTicketsCreated >= 50) {
         return interaction.reply({
-            content: "🔒 **Límite Gratuito Alcanzado**\nEste servidor ha superado el límite de 50 tickets. El administrador debe actualizar a **Tenancy Premium** para desbloquear tickets ilimitados.",
+            content: t(lang, "TICKET_LIMIT_REACHED"),
             flags: [MessageFlags.Ephemeral],
         });
     }
 
-    // Verificar si ya tiene un ticket abierto
     const existingTicket = await Ticket.findOne({
         guildId: interaction.guildId,
         userId: interaction.user.id,
@@ -47,23 +46,22 @@ export async function handleTicketSelect(interaction) {
 
     if (existingTicket) {
         return interaction.reply({
-            content: `❌ Ya tienes un ticket abierto: <#${existingTicket.channelId}>`,
+            content: t(lang, "TICKET_ALREADY_OPEN", { channel: `<#${existingTicket.channelId}>` }),
             flags: [MessageFlags.Ephemeral],
         });
     }
 
-    // Mostrar modal para el asunto
     const category = guildConfig.categories.find(c => c.id === categoryId);
     const categoryName = category ? category.name : "General";
 
     const modal = new ModalBuilder()
         .setCustomId(`ticket_modal_${categoryId}`)
-        .setTitle(`📝 Nuevo Ticket — ${categoryName}`);
+        .setTitle(t(lang, "TICKET_MODAL_TITLE", { category: categoryName }).substring(0, 45));
 
     const subjectInput = new TextInputBuilder()
         .setCustomId("ticket_subject")
-        .setLabel("¿Cuál es el motivo de tu ticket?")
-        .setPlaceholder("Describe brevemente tu problema o consulta...")
+        .setLabel(t(lang, "TICKET_MODAL_SUBJECT"))
+        .setPlaceholder(t(lang, "TICKET_MODAL_SUBJECT_PLACEHOLDER"))
         .setStyle(TextInputStyle.Paragraph)
         .setMaxLength(500)
         .setRequired(true);
@@ -71,12 +69,11 @@ export async function handleTicketSelect(interaction) {
     modal.addComponents(new ActionRowBuilder().addComponents(subjectInput));
     await interaction.showModal(modal);
 
-    // Resetear el select menu del panel para que no quede "seleccionado/bloqueado"
     try {
         await interaction.message.edit({
             components: interaction.message.components,
         });
-    } catch (_) { /* El mensaje pudo haber sido eliminado */ }
+    } catch (_) { }
 }
 
 // ══════════════════════════════════════════════════════
@@ -87,6 +84,7 @@ export async function handleTicketModal(interaction) {
     await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
     const guildConfig = await getGuildConfig(interaction.guildId);
+    const lang = guildConfig.language || "es";
     const categoryId = interaction.customId.replace("ticket_modal_", "");
     const subject = interaction.fields.getTextInputValue("ticket_subject");
 
@@ -94,7 +92,6 @@ export async function handleTicketModal(interaction) {
     const categoryName = category ? category.name : "General";
     const categoryEmoji = category ? category.emoji : "🎫";
 
-    // Incrementar contador de tickets
     const newCount = (guildConfig.ticketCounter || 0) + 1;
     const newTotal = (guildConfig.totalTicketsCreated || 0) + 1;
     await updateGuildConfig(interaction.guildId, { 
@@ -104,14 +101,11 @@ export async function handleTicketModal(interaction) {
 
     const ticketName = `${categoryEmoji}┃ticket-${String(newCount).padStart(4, "0")}`;
 
-    // ═══ Crear canal privado ═══
     const permissionOverwrites = [
-        // Bloquear a @everyone
         {
             id: interaction.guild.id,
             deny: [PermissionFlagsBits.ViewChannel],
         },
-        // Permitir al usuario que abrió
         {
             id: interaction.user.id,
             allow: [
@@ -121,7 +115,6 @@ export async function handleTicketModal(interaction) {
                 PermissionFlagsBits.ReadMessageHistory,
             ],
         },
-        // Permitir al bot
         {
             id: interaction.client.user.id,
             allow: [
@@ -134,7 +127,6 @@ export async function handleTicketModal(interaction) {
         },
     ];
 
-    // Añadir roles de soporte
     for (const roleId of guildConfig.supportRoles) {
         permissionOverwrites.push({
             id: roleId,
@@ -146,7 +138,6 @@ export async function handleTicketModal(interaction) {
         });
     }
 
-    // Añadir roles de admin
     for (const roleId of guildConfig.adminRoles) {
         permissionOverwrites.push({
             id: roleId,
@@ -166,7 +157,6 @@ export async function handleTicketModal(interaction) {
         permissionOverwrites,
     });
 
-    // ═══ Guardar ticket en DB ═══
     await Ticket.create({
         ticketNumber: newCount,
         guildId: interaction.guildId,
@@ -178,7 +168,6 @@ export async function handleTicketModal(interaction) {
         subject,
     });
 
-    // ═══ Mensaje de bienvenida en el ticket ═══
     const greeting = guildConfig.ticketGreeting
         .replace("{user}", `<@${interaction.user.id}>`)
         .replace("{subject}", subject)
@@ -190,31 +179,30 @@ export async function handleTicketModal(interaction) {
             name: interaction.user.username,
             iconURL: interaction.user.displayAvatarURL(),
         })
-        .setTitle(`${categoryEmoji} Ticket #${String(newCount).padStart(4, "0")}`)
+        .setTitle(t(lang, "TICKET_EMBED_TITLE", { emoji: categoryEmoji, number: String(newCount).padStart(4, "0") }))
         .setDescription(greeting)
         .addFields(
-            { name: "📁 Categoría", value: categoryName, inline: true },
-            { name: "📋 Estado", value: "🟢 Abierto", inline: true },
-            { name: "👤 Reclamado por", value: "Nadie aún", inline: true },
+            { name: t(lang, "TICKET_EMBED_CATEGORY"), value: categoryName, inline: true },
+            { name: t(lang, "TICKET_EMBED_STATUS"), value: t(lang, "TICKET_EMBED_STATUS_OPEN"), inline: true },
+            { name: t(lang, "TICKET_EMBED_CLAIMED_BY"), value: t(lang, "TICKET_EMBED_NOBODY"), inline: true },
         )
         .setFooter({ text: `ID: ${channel.id}` })
         .setTimestamp();
 
-    // ═══ Botones de gestión ═══
     const buttons = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId("ticket_close")
-            .setLabel("Cerrar Ticket")
+            .setLabel(t(lang, "BTN_CLOSE"))
             .setEmoji("🔒")
             .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
             .setCustomId("ticket_claim")
-            .setLabel("Reclamar")
+            .setLabel(t(lang, "BTN_CLAIM"))
             .setEmoji("📌")
             .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
             .setCustomId("ticket_add")
-            .setLabel("Añadir Usuario")
+            .setLabel(t(lang, "BTN_ADD_USER"))
             .setEmoji("👤")
             .setStyle(ButtonStyle.Secondary),
     );
@@ -225,9 +213,8 @@ export async function handleTicketModal(interaction) {
         components: [buttons],
     });
 
-    // ═══ Respuesta efímera al usuario ═══
     await interaction.editReply({
-        content: `✅ ¡Ticket creado! Ve a ${channel} para continuar.`,
+        content: t(lang, "TICKET_CREATED_MSG", { channel: `<#${channel.id}>` }),
     });
 }
 
@@ -251,8 +238,10 @@ export async function handleTicketButton(interaction) {
     }
 }
 
-// ─── Cerrar Ticket ───
 async function closeTicket(interaction) {
+    const guildConfig = await getGuildConfig(interaction.guildId);
+    const lang = guildConfig.language || "es";
+
     const ticket = await Ticket.findOne({
         channelId: interaction.channelId,
         status: "open",
@@ -260,7 +249,7 @@ async function closeTicket(interaction) {
 
     if (!ticket) {
         return interaction.reply({
-            content: "❌ Este canal no es un ticket activo.",
+            content: t(lang, "TICKET_NOT_ACTIVE"),
             flags: [MessageFlags.Ephemeral],
         });
     }
@@ -269,13 +258,12 @@ async function closeTicket(interaction) {
         embeds: [
             new EmbedBuilder()
                 .setColor(0xED4245)
-                .setTitle("🔒 Ticket Cerrado")
-                .setDescription(`Cerrado por <@${interaction.user.id}>.\nGenerando transcripción...\nEste canal se eliminará en **10 segundos**.`)
+                .setTitle(t(lang, "TICKET_CLOSED_TITLE"))
+                .setDescription(t(lang, "TICKET_CLOSED_DESC", { user: `<@${interaction.user.id}>` }))
                 .setTimestamp(),
         ],
     });
 
-    // Actualizar en DB
     await Ticket.updateOne(
         { channelId: interaction.channelId },
         {
@@ -285,8 +273,6 @@ async function closeTicket(interaction) {
         }
     );
 
-    // ═══ Generar Transcripción HTML ═══
-    const guildConfig = await getGuildConfig(interaction.guildId);
     const ticketLabel = `ticket-${String(ticket.ticketNumber).padStart(4, "0")}`;
 
     try {
@@ -298,7 +284,6 @@ async function closeTicket(interaction) {
             saveImages: false,
         });
 
-        // Enviar al canal de logs
         if (guildConfig.logChannelId) {
             const logChannel = interaction.guild.channels.cache.get(guildConfig.logChannelId);
             if (logChannel) {
@@ -322,35 +307,46 @@ async function closeTicket(interaction) {
             }
         }
 
-        // También enviar transcripción al usuario que abrió el ticket (DM)
         try {
             const ticketUser = await interaction.client.users.fetch(ticket.userId);
             const dmEmbed = new EmbedBuilder()
                 .setColor(0x5865F2)
-                .setTitle(`📋 Transcripción — Ticket #${String(ticket.ticketNumber).padStart(4, "0")}`)
-                .setDescription(`Tu ticket en **${interaction.guild.name}** ha sido cerrado.\nAquí tienes la transcripción completa.`)
+                .setTitle(t(lang, "TRANSCRIPT_DM_TITLE", { number: String(ticket.ticketNumber).padStart(4, "0") }))
+                .setDescription(t(lang, "TRANSCRIPT_DM_DESC", { guildName: interaction.guild.name }))
                 .addFields(
-                    { name: "Asunto", value: ticket.subject || "Sin asunto" },
-                    { name: "Cerrado por", value: `<@${interaction.user.id}>` },
+                    { name: t(lang, "TRANSCRIPT_SUBJECT"), value: ticket.subject || t(lang, "TRANSCRIPT_NO_SUBJECT") },
+                    { name: t(lang, "TRANSCRIPT_CLOSED_BY"), value: `<@${interaction.user.id}>` },
                 )
                 .setTimestamp();
 
-            await ticketUser.send({ embeds: [dmEmbed], files: [transcript] });
-        } catch (_) { /* DMs desactivados o usuario no encontrado */ }
+            // RATING BUTTONS
+            const rateEmbed = new EmbedBuilder()
+                .setColor(0xF1C40F)
+                .setTitle(t(lang, "RATE_DM_TITLE"))
+                .setDescription(t(lang, "RATE_DM_DESC", { guildName: interaction.guild.name }));
+
+            const rateRow = new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setCustomId(`ticket_rate_1_${ticket.channelId}`).setLabel("1").setEmoji("⭐").setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId(`ticket_rate_2_${ticket.channelId}`).setLabel("2").setEmoji("⭐").setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId(`ticket_rate_3_${ticket.channelId}`).setLabel("3").setEmoji("⭐").setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId(`ticket_rate_4_${ticket.channelId}`).setLabel("4").setEmoji("⭐").setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId(`ticket_rate_5_${ticket.channelId}`).setLabel("5").setEmoji("⭐").setStyle(ButtonStyle.Secondary),
+            );
+
+            await ticketUser.send({ embeds: [dmEmbed, rateEmbed], components: [rateRow], files: [transcript] });
+        } catch (_) { }
 
     } catch (err) {
         console.error("⚠️ Error al generar transcripción:", err.message);
     }
 
-    // Eliminar canal después de 10 segundos
     setTimeout(async () => {
         try {
             await interaction.channel.delete();
-        } catch (_) { /* Canal ya fue eliminado */ }
+        } catch (_) { }
     }, 10000);
 }
 
-// ─── Calcular duración del ticket ───
 function getTicketDuration(createdAt) {
     const diff = Date.now() - new Date(createdAt).getTime();
     const mins = Math.floor(diff / 60000);
@@ -361,18 +357,17 @@ function getTicketDuration(createdAt) {
     return `${days} día${days !== 1 ? "s" : ""} ${hours % 24}h`;
 }
 
-// ─── Reclamar Ticket ───
 async function claimTicket(interaction) {
     const guildConfig = await getGuildConfig(interaction.guildId);
+    const lang = guildConfig.language || "es";
 
-    // Verificar que es staff
     const isStaff = interaction.member.roles.cache.some(
         (r) => guildConfig.supportRoles.includes(r.id) || guildConfig.adminRoles.includes(r.id)
     );
 
     if (!isStaff) {
         return interaction.reply({
-            content: "❌ Solo el staff puede reclamar tickets.",
+            content: t(lang, "TICKET_ONLY_STAFF_CLAIM"),
             flags: [MessageFlags.Ephemeral],
         });
     }
@@ -384,14 +379,14 @@ async function claimTicket(interaction) {
 
     if (!ticket) {
         return interaction.reply({
-            content: "❌ Este canal no es un ticket activo.",
+            content: t(lang, "TICKET_NOT_ACTIVE"),
             flags: [MessageFlags.Ephemeral],
         });
     }
 
     if (ticket.claimedBy) {
         return interaction.reply({
-            content: `❌ Este ticket ya fue reclamado por <@${ticket.claimedBy}>.`,
+            content: t(lang, "TICKET_ALREADY_CLAIMED", { user: `<@${ticket.claimedBy}>` }),
             flags: [MessageFlags.Ephemeral],
         });
     }
@@ -405,14 +400,14 @@ async function claimTicket(interaction) {
         embeds: [
             new EmbedBuilder()
                 .setColor(0x57F287)
-                .setDescription(`📌 <@${interaction.user.id}> ha reclamado este ticket.`)
+                .setDescription(t(lang, "TICKET_CLAIMED_SUCCESS", { user: `<@${interaction.user.id}>` }))
         ],
     });
 }
 
-// ─── Añadir Usuario al Ticket ───
 async function addUserToTicket(interaction) {
     const guildConfig = await getGuildConfig(interaction.guildId);
+    const lang = guildConfig.language || "es";
 
     const isStaff = interaction.member.roles.cache.some(
         (r) => guildConfig.supportRoles.includes(r.id) || guildConfig.adminRoles.includes(r.id)
@@ -420,20 +415,19 @@ async function addUserToTicket(interaction) {
 
     if (!isStaff) {
         return interaction.reply({
-            content: "❌ Solo el staff puede añadir usuarios.",
+            content: t(lang, "TICKET_ONLY_STAFF_ADD"),
             flags: [MessageFlags.Ephemeral],
         });
     }
 
-    // Mostrar modal para el ID/mención del usuario
     const modal = new ModalBuilder()
         .setCustomId("ticket_modal_adduser")
-        .setTitle("👤 Añadir Usuario al Ticket");
+        .setTitle(t(lang, "TICKET_MODAL_ADD_TITLE").substring(0, 45));
 
     const userInput = new TextInputBuilder()
         .setCustomId("user_id_input")
-        .setLabel("ID del usuario o mención")
-        .setPlaceholder("Ej: 123456789012345678")
+        .setLabel(t(lang, "TICKET_MODAL_ADD_LABEL").substring(0, 45))
+        .setPlaceholder(t(lang, "TICKET_MODAL_ADD_PLACEHOLDER").substring(0, 100))
         .setStyle(TextInputStyle.Short)
         .setRequired(true);
 
@@ -441,12 +435,10 @@ async function addUserToTicket(interaction) {
     await interaction.showModal(modal);
 }
 
-// ══════════════════════════════════════════════════════
-// HANDLER EXTRA: Modal de Añadir Usuario
-// ══════════════════════════════════════════════════════
-
-// Se importa desde interactionCreate.js si el customId es "ticket_modal_adduser"
 export async function handleAddUserModal(interaction) {
+    const guildConfig = await getGuildConfig(interaction.guildId);
+    const lang = guildConfig.language || "es";
+
     const userIdRaw = interaction.fields.getTextInputValue("user_id_input");
     const userId = userIdRaw.replace(/[<@!>]/g, "").trim();
 
@@ -467,12 +459,12 @@ export async function handleAddUserModal(interaction) {
             embeds: [
                 new EmbedBuilder()
                     .setColor(0x5865F2)
-                    .setDescription(`✅ <@${userId}> ha sido añadido al ticket.`)
+                    .setDescription(t(lang, "TICKET_USER_ADDED", { user: `<@${userId}>` }))
             ],
         });
     } catch {
         await interaction.reply({
-            content: "❌ No se pudo encontrar al usuario. Verifica el ID.",
+            content: t(lang, "TICKET_USER_NOT_FOUND"),
             flags: [MessageFlags.Ephemeral],
         });
     }
