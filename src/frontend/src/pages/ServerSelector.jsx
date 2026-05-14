@@ -21,9 +21,6 @@ export default function ServerSelector() {
     fetch('/api/servers')
       .then(res => {
         if (!res.ok) {
-          if (res.status === 401) {
-            window.location.href = '/';
-          }
           throw new Error('Not authenticated');
         }
         return res.json();
