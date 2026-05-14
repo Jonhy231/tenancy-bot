@@ -8,7 +8,15 @@ export default function ServerSelector() {
 
   useEffect(() => {
     fetch('/api/servers')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          if (res.status === 401) {
+            window.location.href = '/';
+          }
+          throw new Error('Not authenticated');
+        }
+        return res.json();
+      })
       .then(data => {
         setServersWithBot(data.serversWithBot || []);
         setServersWithoutBot(data.serversWithoutBot || []);
