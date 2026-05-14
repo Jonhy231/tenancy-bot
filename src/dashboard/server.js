@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import { getGuildConfig, updateGuildConfig, invalidateCache } from "../database/cache.js";
 import Ticket from "../database/models/Ticket.js";
 import Guild from "../database/models/Guild.js";
+import Level from "../database/models/Level.js";
 import {
     EmbedBuilder,
     ActionRowBuilder,
@@ -359,6 +360,7 @@ export function startDashboard(client) {
             "ticketCategoryId", "logChannelId", "transcriptChannelId",
             "panelChannelId", "panelEmbed", "ticketGreeting",
             "language", "applicationsChannelId", "applicationsPanelChannelId", "applications",
+            "moderation", "levels",
         ];
 
         const updates = {};
@@ -690,6 +692,48 @@ export function startDashboard(client) {
         }
     });
 
+    // ══════════════════════════════════════
+    // API: Logs de Tickets
+    // ══════════════════════════════════════
+    app.get("/api/server/:guildId/tickets/logs", async (req, res) => {
+        if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
+        const { guildId } = req.params;
+        if (!(await hasAccess(req.session.user, guildId))) {
+            return res.status(403).json({ error: "Sin permisos" });
+        }
+
+        try {
+            const logs = await Ticket.find({ guildId, status: "closed" })
+                .sort({ closedAt: -1, updatedAt: -1 })
+                .limit(50)
+                .lean();
+            res.json(logs);
+        } catch (error) {
+            res.status(500).json({ error: "Error al obtener logs" });
+        }
+    });
+
+    // ══════════════════════════════════════
+    // API: Niveles (Leaderboard)
+    // ══════════════════════════════════════
+    app.get("/api/server/:guildId/levels/leaderboard", async (req, res) => {
+        if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
+        const { guildId } = req.params;
+        if (!(await hasAccess(req.session.user, guildId))) {
+            return res.status(403).json({ error: "Sin permisos" });
+        }
+
+        try {
+            const leaderboard = await Level.find({ guildId })
+                .sort({ xp: -1 })
+                .limit(100)
+                .lean();
+            res.json(leaderboard);
+        } catch (error) {
+            res.status(500).json({ error: "Error al obtener leaderboard" });
+        }
+    });
+
     // ═══ Utilidades ═══
     async function hasAccess(user, guildId) {
         const MANAGE_GUILD = 0x20;
@@ -716,7 +760,8 @@ export function startDashboard(client) {
 
     // ═══ SPA fallback ═══
     app.get("/dashboard*", (req, res) => {
-        res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+        // Sirve el index.html de Vite para la SPA de React
+        res.sendFile(path.join(__dirname, "public", "index.html"));
     });
 
     // ═══ Iniciar ═══

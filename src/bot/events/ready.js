@@ -33,7 +33,15 @@ export function setupEvents(client) {
         }
     });
 
-    // ═══ Actualizar info del guild en la DB al unirse ═══
+    // ═══ Mensajes (Niveles y Moderación) ═══
+    client.on(Events.MessageCreate, async (message) => {
+        try {
+            const { handleMessageCreate } = await import("./messageCreate.js");
+            await handleMessageCreate(message);
+        } catch (error) {
+            console.error("❌ Error en messageCreate:", error);
+        }
+    });
     client.on(Events.GuildCreate, async (guild) => {
         console.log(`🆕 Bot añadido a: ${guild.name} (${guild.id})`);
     });

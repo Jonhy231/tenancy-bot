@@ -59,7 +59,28 @@ const guildSchema = new mongoose.Schema({
     // ═══ Contadores y Límites ═══
     ticketCounter: { type: Number, default: 0 },
     totalTicketsCreated: { type: Number, default: 0 },
+    
+    // ═══ Sistema Premium ═══
     isPremium: { type: Boolean, default: false },
+    premium: {
+        active: { type: Boolean, default: false },
+        expiresAt: { type: Date, default: null },
+        permanent: { type: Boolean, default: false },
+    },
+
+    // ═══ Moderación ═══
+    moderation: {
+        logChannelId: { type: String, default: "" },
+        autoDeleteLinks: { type: Boolean, default: false },
+        autoDeleteSwearWords: { type: Boolean, default: false },
+    },
+
+    // ═══ Niveles ═══
+    levels: {
+        enabled: { type: Boolean, default: false },
+        xpPerMessage: { type: Number, default: 10 },
+        levelUpChannelId: { type: String, default: "" },
+    },
 
     // ═══ Internacionalización ═══
     language: { type: String, enum: ["es", "en"], default: "es" },
