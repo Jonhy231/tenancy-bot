@@ -14,12 +14,12 @@ export default function Sidebar({ guildId }) {
   return (
     <aside className="fixed left-0 top-0 h-full w-[260px] bg-surface-container dark:bg-surface-container-low/50 backdrop-blur-2xl border-r border-outline-variant/10 shadow-2xl flex flex-col py-8 px-4 z-40 transition-transform md:translate-x-0 -translate-x-full">
       <div className="mb-10 px-2 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-container to-secondary-container flex items-center justify-center neon-pulse">
-          <span className="material-symbols-outlined text-on-primary">terminal</span>
+        <div className="w-12 h-12 rounded-xl bg-[#1A1F2E] flex items-center justify-center border border-outline-variant/20 shadow-[0_0_15px_rgba(0,210,255,0.1)]">
+          <span className="material-symbols-outlined text-on-surface-variant/80 text-[24px]">shield</span>
         </div>
         <div>
-          <h1 className="text-headline-md font-headline-md text-primary leading-tight">Tenancy</h1>
-          <p className="font-label-md text-[10px] uppercase tracking-widest text-on-surface-variant/40">Infrastructure v2.4</p>
+          <h1 className="text-[18px] font-headline-md text-primary font-bold leading-tight">Tenancy Bot</h1>
+          <p className="font-label-md text-[11px] text-on-surface-variant/50">Infrastructure v2.4</p>
         </div>
       </div>
       
