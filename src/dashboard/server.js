@@ -109,7 +109,7 @@ export function startDashboard(client) {
                 accessToken: tokenData.access_token,
             };
 
-            res.redirect("/dashboard.html");
+            res.redirect("/dashboard");
         } catch (error) {
             console.error("❌ Error en OAuth2:", error);
             res.redirect("/?error=auth_failed");
