@@ -5,10 +5,11 @@ import { fileURLToPath } from "url";
 import { getGuildConfig, updateGuildConfig, invalidateCache } from "../database/cache.js";
 import Ticket from "../database/models/Ticket.js";
 import Guild from "../database/models/Guild.js";
-import Level from "../database/models/Level.js";
 import {
     EmbedBuilder,
     ActionRowBuilder,
+    StringSelectMenuBuilder,
+    StringSelectMenuOptionBuilder,
     ButtonBuilder,
     ButtonStyle,
     ChannelType,
@@ -40,14 +41,11 @@ export function startDashboard(client) {
     // ══════════════════════════════════════
 
     app.get("/health", (req, res) => {
-        // Siempre 200 — Railway solo necesita que el servidor responda.
-        // El estado del bot es informativo, no condiciona el healthcheck.
-        const isReady = client?.isReady?.() ?? false;
         res.status(200).json({
             status: "ok",
             uptime: Math.floor(process.uptime()),
-            bot: isReady ? "online" : "connecting",
-            guilds: isReady ? client.guilds.cache.size : 0,
+            bot: client.isReady() ? "online" : "connecting",
+            guilds: client.guilds.cache.size,
         });
     });
 
@@ -109,7 +107,7 @@ export function startDashboard(client) {
                 accessToken: tokenData.access_token,
             };
 
-            res.redirect("/dashboard");
+            res.redirect("/dashboard.html");
         } catch (error) {
             console.error("❌ Error en OAuth2:", error);
             res.redirect("/?error=auth_failed");
@@ -360,7 +358,6 @@ export function startDashboard(client) {
             "ticketCategoryId", "logChannelId", "transcriptChannelId",
             "panelChannelId", "panelEmbed", "ticketGreeting",
             "language", "applicationsChannelId", "applicationsPanelChannelId", "applications",
-            "moderation", "levels",
         ];
 
         const updates = {};
@@ -497,27 +494,26 @@ export function startDashboard(client) {
                 embed.setFooter({ text: "⚡ Powered by Tenancy" });
             }
 
-            // ═══ Construir Botones por Categoría ═══
-            const rows = [];
-            for (let i = 0; i < config.categories.length; i += 5) {
-                const row = new ActionRowBuilder();
-                const chunk = config.categories.slice(i, i + 5);
-                for (const cat of chunk) {
-                    const btn = new ButtonBuilder()
-                        .setCustomId(`ticket_cat_${cat.id}`)
-                        .setLabel(cat.name.slice(0, 80))
-                        .setStyle(ButtonStyle.Secondary);
-                    if (cat.emoji) {
-                        try { btn.setEmoji(cat.emoji); } catch (_) {}
-                    }
-                    row.addComponents(btn);
-                }
-                rows.push(row);
+            // ═══ Construir Select Menu ═══
+            const selectMenu = new StringSelectMenuBuilder()
+                .setCustomId("ticket_category_select")
+                .setPlaceholder("📂 Selecciona una categoría...");
+
+            for (const cat of config.categories) {
+                const option = new StringSelectMenuOptionBuilder()
+                    .setLabel(cat.name)
+                    .setValue(cat.id)
+                    .setDescription(cat.description || "Soporte");
+
+                if (cat.emoji) option.setEmoji(cat.emoji);
+                selectMenu.addOptions(option);
             }
+
+            const row = new ActionRowBuilder().addComponents(selectMenu);
 
             const messagePayload = {
                 embeds: [embed],
-                components: rows,
+                components: [row],
             };
 
             // ═══ Enviar o Editar ═══
@@ -692,48 +688,6 @@ export function startDashboard(client) {
         }
     });
 
-    // ══════════════════════════════════════
-    // API: Logs de Tickets
-    // ══════════════════════════════════════
-    app.get("/api/server/:guildId/tickets/logs", async (req, res) => {
-        if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
-        const { guildId } = req.params;
-        if (!(await hasAccess(req.session.user, guildId))) {
-            return res.status(403).json({ error: "Sin permisos" });
-        }
-
-        try {
-            const logs = await Ticket.find({ guildId, status: "closed" })
-                .sort({ closedAt: -1, updatedAt: -1 })
-                .limit(50)
-                .lean();
-            res.json(logs);
-        } catch (error) {
-            res.status(500).json({ error: "Error al obtener logs" });
-        }
-    });
-
-    // ══════════════════════════════════════
-    // API: Niveles (Leaderboard)
-    // ══════════════════════════════════════
-    app.get("/api/server/:guildId/levels/leaderboard", async (req, res) => {
-        if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
-        const { guildId } = req.params;
-        if (!(await hasAccess(req.session.user, guildId))) {
-            return res.status(403).json({ error: "Sin permisos" });
-        }
-
-        try {
-            const leaderboard = await Level.find({ guildId })
-                .sort({ xp: -1 })
-                .limit(100)
-                .lean();
-            res.json(leaderboard);
-        } catch (error) {
-            res.status(500).json({ error: "Error al obtener leaderboard" });
-        }
-    });
-
     // ═══ Utilidades ═══
     async function hasAccess(user, guildId) {
         const MANAGE_GUILD = 0x20;
@@ -758,10 +712,14 @@ export function startDashboard(client) {
         return false;
     }
 
+    // ═══ Health Check (Railway) ═══
+    app.get("/health", (req, res) => {
+        res.status(200).send("OK");
+    });
+
     // ═══ SPA fallback ═══
     app.get("/dashboard*", (req, res) => {
-        // Sirve el index.html de Vite para la SPA de React
-        res.sendFile(path.join(__dirname, "public", "index.html"));
+        res.sendFile(path.join(__dirname, "public", "dashboard.html"));
     });
 
     // ═══ Iniciar ═══
