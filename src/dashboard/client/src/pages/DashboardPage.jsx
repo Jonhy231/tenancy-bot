@@ -27,12 +27,19 @@ function DevView({ guildId }) {
   const [saving, setSaving] = useState(false)
   const [servers, setServers] = useState([])
   const [loadingServers, setLoadingServers] = useState(true)
+  const [simulating, setSimulating] = useState(false)
 
-  useEffect(() => {
-    api.get('/api/dev/servers')
-      .then(d => setServers(d.servers || []))
+  const refreshServers = () => {
+    return api.get('/api/dev/servers')
+      .then(d => { setServers(d.servers || []); setLoadingServers(false) })
       .catch(e => toast(e.message, 'error'))
-      .finally(() => setLoadingServers(false))
+  }
+
+  // Carga inicial + auto-refresh cada 10s
+  useEffect(() => {
+    refreshServers()
+    const interval = setInterval(refreshServers, 10000)
+    return () => clearInterval(interval)
   }, [])
 
   const grant = async (active) => {
@@ -40,39 +47,104 @@ function DevView({ guildId }) {
     try {
       await api.post(`/api/dev/premium/${gId}`, { isPremium: active, days: perm ? null : parseInt(days), permanent: perm })
       toast(active ? '⚡ Premium activado' : 'Premium revocado', 'success')
-      // Refrescar tabla
-      const d = await api.get('/api/dev/servers')
-      setServers(d.servers || [])
+      await refreshServers()
     } catch(e) { toast(e.message, 'error') }
     finally { setSaving(false) }
   }
+
+  const simulateTickets = async (count) => {
+    if (!gId) return toast('Selecciona un servidor primero', 'error')
+    setSimulating(true)
+    try {
+      const result = await api.post(`/api/dev/simulate-ticket/${gId}`, { count })
+      toast(`+${result.added} tickets → ${result.monthlyTicketsUsed}/50 (quedan: ${result.remaining})`, 'success')
+      await refreshServers()
+    } catch(e) { toast(e.message, 'error') }
+    finally { setSimulating(false) }
+  }
+
+  const resetMonthly = async () => {
+    if (!gId) return toast('Selecciona un servidor primero', 'error')
+    try {
+      await api.post(`/api/dev/reset-monthly/${gId}`, {})
+      toast('🔄 Contador mensual reseteado a 0', 'success')
+      await refreshServers()
+    } catch(e) { toast(e.message, 'error') }
+  }
+
+  // Info del servidor seleccionado
+  const selectedServer = servers.find(s => s.guildId === gId)
 
   return (
     <div>
       <div className="view-header"><h1 style={{ color: '#ff6ef7' }}>⚡ Dev Terminal</h1></div>
 
-      {/* Premium Management */}
-      <div className="card" style={{ maxWidth: 500, marginBottom: 24 }}>
-        <div className="card-header"><h3 style={{ color: '#ff6ef7' }}>Gestión Premium</h3></div>
-        <div className="card-body">
-          <div className="form-group">
-            <label className="form-label">ID del Servidor</label>
-            <input className="form-input" value={gId} onChange={e => setGId(e.target.value)} placeholder="123456789..." />
+      <div className="grid-2" style={{ marginBottom: 24, alignItems: 'start' }}>
+        {/* Premium Management */}
+        <div className="card">
+          <div className="card-header"><h3 style={{ color: '#ff6ef7' }}>Gestión Premium</h3></div>
+          <div className="card-body">
+            <div className="form-group">
+              <label className="form-label">ID del Servidor</label>
+              <input className="form-input" value={gId} onChange={e => setGId(e.target.value)} placeholder="Haz clic en un servidor abajo..." />
+              {selectedServer && (
+                <p className="form-hint" style={{ color: 'var(--accent)' }}>→ {selectedServer.guildName}</p>
+              )}
+            </div>
+            <div className="form-group">
+              <label className="form-label">Duración (días)</label>
+              <input className="form-input" type="number" value={days} onChange={e => setDays(e.target.value)} disabled={perm} />
+            </div>
+            <div className="form-group" style={{ display:'flex', alignItems:'center', gap:10 }}>
+              <input type="checkbox" id="perm" checked={perm} onChange={e => setPerm(e.target.checked)} />
+              <label htmlFor="perm" className="form-label" style={{ margin:0 }}>Permanente</label>
+            </div>
+            <div style={{ display:'flex', gap:10, marginTop:8 }}>
+              <button className="btn" style={{ background:'rgba(255,0,255,0.1)', color:'#ff6ef7', border:'1px solid #ff6ef7' }} onClick={() => grant(true)} disabled={saving}>
+                ⚡ Activar
+              </button>
+              <button className="btn btn-danger" onClick={() => grant(false)} disabled={saving}>
+                Revocar
+              </button>
+            </div>
           </div>
-          <div className="form-group">
-            <label className="form-label">Duración (días)</label>
-            <input className="form-input" type="number" value={days} onChange={e => setDays(e.target.value)} disabled={perm} />
-          </div>
-          <div className="form-group" style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <input type="checkbox" id="perm" checked={perm} onChange={e => setPerm(e.target.checked)} />
-            <label htmlFor="perm" className="form-label" style={{ margin:0 }}>Permanente</label>
-          </div>
-          <div style={{ display:'flex', gap:10, marginTop:8 }}>
-            <button className="btn" style={{ background:'rgba(255,0,255,0.1)', color:'#ff6ef7', border:'1px solid #ff6ef7' }} onClick={() => grant(true)} disabled={saving}>
-              ⚡ Activar Premium
-            </button>
-            <button className="btn btn-danger" onClick={() => grant(false)} disabled={saving}>
-              Revocar
+        </div>
+
+        {/* Simulate Tickets */}
+        <div className="card">
+          <div className="card-header"><h3 style={{ color: '#ff6ef7' }}>🧪 Simular Tickets</h3></div>
+          <div className="card-body">
+            <p className="text-muted text-sm" style={{ marginBottom: 12 }}>
+              Simula la creación de tickets para probar el sistema de límites mensuales (50/mes para Free).
+            </p>
+            {selectedServer && (
+              <div style={{ background:'var(--bg-primary)', borderRadius:8, padding:12, marginBottom:16, border:'1px solid var(--border)' }}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+                  <span className="text-sm" style={{ fontWeight:600 }}>{selectedServer.guildName}</span>
+                  <span className="text-sm" style={{ fontWeight:700, color: selectedServer.monthlyTicketsUsed >= 50 && !selectedServer.isPremium ? 'var(--danger)' : 'var(--success)' }}>
+                    {selectedServer.monthlyTicketsUsed}/{selectedServer.monthlyLimit}
+                  </span>
+                </div>
+                <div style={{ height:8, background:'var(--bg-hover)', borderRadius:4, overflow:'hidden' }}>
+                  <div style={{
+                    width: selectedServer.isPremium ? '0%' : `${Math.min((selectedServer.monthlyTicketsUsed / 50) * 100, 100)}%`,
+                    height:'100%',
+                    background: selectedServer.monthlyTicketsUsed >= 50 ? 'var(--danger)' : selectedServer.monthlyTicketsUsed >= 40 ? 'var(--warning)' : 'var(--success)',
+                    borderRadius: 4,
+                    transition: 'width 0.5s ease',
+                  }} />
+                </div>
+              </div>
+            )}
+            <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+              <button className="btn btn-ghost" onClick={() => simulateTickets(1)} disabled={simulating || !gId}>+1 ticket</button>
+              <button className="btn btn-ghost" onClick={() => simulateTickets(5)} disabled={simulating || !gId}>+5 tickets</button>
+              <button className="btn btn-ghost" onClick={() => simulateTickets(10)} disabled={simulating || !gId}>+10 tickets</button>
+              <button className="btn btn-ghost" onClick={() => simulateTickets(25)} disabled={simulating || !gId}>+25 tickets</button>
+            </div>
+            <hr className="divider" />
+            <button className="btn btn-danger btn-sm" onClick={resetMonthly} disabled={!gId}>
+              🔄 Resetear contador mensual
             </button>
           </div>
         </div>
@@ -82,7 +154,11 @@ function DevView({ guildId }) {
       <div className="card">
         <div className="card-header">
           <h3 style={{ color: '#ff6ef7' }}>📊 Consumo de Tickets por Servidor</h3>
-          <span className="badge badge-gray">{servers.length} servidores</span>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <span className="text-muted text-sm">Auto-refresh: 10s</span>
+            <span className="badge badge-gray">{servers.length} servidores</span>
+            <button className="btn btn-ghost btn-sm" onClick={refreshServers}>🔄</button>
+          </div>
         </div>
         <div className="card-body" style={{ padding: 0 }}>
           {loadingServers ? (
@@ -97,7 +173,7 @@ function DevView({ guildId }) {
                     <th>Servidor</th>
                     <th>Miembros</th>
                     <th>Uso Mensual</th>
-                    <th>Total Histórico</th>
+                    <th>Total</th>
                     <th>Modo</th>
                     <th>Premium</th>
                   </tr>
@@ -107,8 +183,9 @@ function DevView({ guildId }) {
                     const pct = s.isPremium ? 0 : Math.min((s.monthlyTicketsUsed / 50) * 100, 100)
                     const isNearLimit = pct >= 80
                     const isAtLimit = pct >= 100
+                    const isSelected = s.guildId === gId
                     return (
-                      <tr key={s.guildId} onClick={() => setGId(s.guildId)} style={{ cursor: 'pointer' }}>
+                      <tr key={s.guildId} onClick={() => setGId(s.guildId)} style={{ cursor: 'pointer', background: isSelected ? 'var(--accent-dim)' : undefined }}>
                         <td>
                           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                             {s.guildIcon
@@ -130,7 +207,7 @@ function DevView({ guildId }) {
                                 height: '100%',
                                 background: isAtLimit ? 'var(--danger)' : isNearLimit ? 'var(--warning)' : 'var(--success)',
                                 borderRadius: 3,
-                                transition: 'width 0.3s ease',
+                                transition: 'width 0.5s ease',
                               }} />
                             </div>
                             <span style={{ fontSize:'0.8rem', fontWeight:600, color: isAtLimit ? 'var(--danger)' : isNearLimit ? 'var(--warning)' : 'var(--text-secondary)' }}>
@@ -158,7 +235,6 @@ function DevView({ guildId }) {
     </div>
   )
 }
-
 
 export default function DashboardPage() {
   const { guildId } = useParams()

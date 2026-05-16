@@ -780,6 +780,68 @@ export function startDashboard(client) {
         }
     });
 
+    // ══════════════════════════════════════
+    // API: Dev Terminal — Simular Tickets (para testing)
+    // ══════════════════════════════════════
+    app.post("/api/dev/simulate-ticket/:guildId", async (req, res) => {
+        if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
+        const DEV_ID = "601394346826268673";
+        if (req.session.user.id !== DEV_ID) {
+            return res.status(403).json({ error: "Acceso denegado" });
+        }
+
+        const { guildId } = req.params;
+        const { count = 1 } = req.body; // cuántos tickets simular
+
+        try {
+            const config = await getGuildConfig(guildId);
+            const addCount = Math.min(Math.max(parseInt(count) || 1, 1), 50); // entre 1 y 50
+
+            const newMonthly = (config.monthlyTicketsUsed || 0) + addCount;
+            const newTotal = (config.totalTicketsCreated || 0) + addCount;
+
+            await updateGuildConfig(guildId, {
+                monthlyTicketsUsed: newMonthly,
+                totalTicketsCreated: newTotal,
+            });
+
+            res.json({
+                success: true,
+                guildId,
+                added: addCount,
+                monthlyTicketsUsed: newMonthly,
+                totalTicketsCreated: newTotal,
+                limit: config.isPremium ? "∞" : 50,
+                remaining: config.isPremium ? "∞" : Math.max(0, 50 - newMonthly),
+            });
+        } catch (error) {
+            console.error("Error en simulate-ticket:", error);
+            res.status(500).json({ error: "Error al simular ticket" });
+        }
+    });
+
+    // ══════════════════════════════════════
+    // API: Dev Terminal — Reset Manual del Contador Mensual
+    // ══════════════════════════════════════
+    app.post("/api/dev/reset-monthly/:guildId", async (req, res) => {
+        if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
+        const DEV_ID = "601394346826268673";
+        if (req.session.user.id !== DEV_ID) {
+            return res.status(403).json({ error: "Acceso denegado" });
+        }
+
+        const { guildId } = req.params;
+        try {
+            await updateGuildConfig(guildId, {
+                monthlyTicketsUsed: 0,
+                monthlyResetDate: new Date(),
+            });
+            res.json({ success: true, guildId, monthlyTicketsUsed: 0 });
+        } catch (error) {
+            res.status(500).json({ error: "Error al resetear" });
+        }
+    });
+
     // ═══ Utilidades ═══
     async function hasAccess(user, guildId) {
         const MANAGE_GUILD = 0x20;
