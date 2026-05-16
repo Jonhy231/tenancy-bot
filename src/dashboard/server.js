@@ -6,6 +6,8 @@ import { fileURLToPath } from "url";
 import { getGuildConfig, updateGuildConfig, invalidateCache } from "../database/cache.js";
 import Ticket from "../database/models/Ticket.js";
 import Guild from "../database/models/Guild.js";
+import Poll from "../database/models/Poll.js";
+import { buildPollMessage } from "../bot/handlers/pollHandler.js";
 import {
     EmbedBuilder,
     ActionRowBuilder,
@@ -831,8 +833,6 @@ export function startDashboard(client) {
     // ══════════════════════════════════════
     // API: Encuestas (Polls)
     // ══════════════════════════════════════
-    const Poll = (await import("../database/models/Poll.js")).default;
-    const { buildPollMessage } = await import("../bot/handlers/pollHandler.js");
 
     // Listar encuestas del servidor
     app.get("/api/server/:guildId/polls", async (req, res) => {
