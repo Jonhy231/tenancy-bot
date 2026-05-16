@@ -41,6 +41,29 @@ const panelEmbedSchema = new mongoose.Schema({
     fields: { type: [embedFieldSchema], default: [] },
 }, { _id: false });
 
+// ═══ Roles por Nivel ═══
+const levelRoleRewardSchema = new mongoose.Schema({
+    level: { type: Number, required: true },
+    roleId: { type: String, required: true },
+}, { _id: false });
+
+// ═══ FAQ Item ═══
+const faqItemSchema = new mongoose.Schema({
+    id: { type: String, required: true },
+    question: { type: String, required: true },
+    answer: { type: String, required: true },
+    emoji: { type: String, default: "❓" },
+}, { _id: false });
+
+// ═══ Auto-Response ═══
+const autoResponseSchema = new mongoose.Schema({
+    id: { type: String, required: true },
+    trigger: { type: String, required: true },
+    response: { type: String, required: true },
+    matchType: { type: String, enum: ["exact", "contains"], default: "contains" },
+    channelIds: { type: [String], default: [] }, // vacío = todos los canales
+}, { _id: false });
+
 const guildSchema = new mongoose.Schema({
     // ═══ Identificación del Tenant ═══
     guildId: { type: String, required: true, unique: true, index: true },
@@ -97,9 +120,13 @@ const guildSchema = new mongoose.Schema({
 
     // ═══ Moderación ═══
     moderation: {
+        enabled: { type: Boolean, default: false },
         logChannelId: { type: String, default: "" },
         autoDeleteLinks: { type: Boolean, default: false },
+        linkWhitelistChannels: { type: [String], default: [] },
         autoDeleteSwearWords: { type: Boolean, default: false },
+        customSwearWords: { type: [String], default: [] },
+        useDefaultSwearWords: { type: Boolean, default: true },
     },
 
     // ═══ Niveles ═══
@@ -107,6 +134,29 @@ const guildSchema = new mongoose.Schema({
         enabled: { type: Boolean, default: false },
         xpPerMessage: { type: Number, default: 10 },
         levelUpChannelId: { type: String, default: "" },
+        levelUpMessage: { type: String, default: "🎉 ¡Felicidades {user}! Has avanzado al nivel **{level}**." },
+        roleRewards: { type: [levelRoleRewardSchema], default: [] },
+    },
+
+    // ═══ FAQ ═══
+    faq: { type: [faqItemSchema], default: [] },
+    faqPanelChannelId: { type: String, default: "" },
+    faqPanelMessageId: { type: String, default: "" },
+
+    // ═══ Auto-Responses ═══
+    autoResponses: { type: [autoResponseSchema], default: [] },
+
+    // ═══ Verificación ═══
+    verification: {
+        enabled: { type: Boolean, default: false },
+        roleId: { type: String, default: "" },
+        channelId: { type: String, default: "" },
+        messageId: { type: String, default: "" },
+        embedTitle: { type: String, default: "✅ Verificación" },
+        embedDescription: { type: String, default: "Haz clic en el botón de abajo para verificarte y acceder al servidor." },
+        embedColor: { type: String, default: "#57F287" },
+        buttonLabel: { type: String, default: "Verificarme" },
+        buttonEmoji: { type: String, default: "✅" },
     },
 
     // ═══ Internacionalización ═══

@@ -1,6 +1,6 @@
 {
     "TICKET_BANNED": "❌ No tienes permitido abrir tickets en este servidor.",
-    "TICKET_LIMIT_REACHED": "🔒 **Límite Gratuito Alcanzado**\nEste servidor ha superado el límite de 50 tickets. El administrador debe actualizar a **Tenancy Premium** para desbloquear tickets ilimitados.",
+    "TICKET_LIMIT_REACHED": "🔒 **Límite Gratuito Alcanzado**\nEste servidor ha superado el límite de 50 tickets mensuales. El administrador debe actualizar a **Tenancy Premium** para desbloquear tickets ilimitados.",
     "TICKET_ALREADY_OPEN": "❌ Ya tienes un ticket abierto: {channel}",
     "TICKET_MODAL_TITLE": "📝 Nuevo Ticket — {category}",
     "TICKET_MODAL_SUBJECT": "¿Cuál es el motivo de tu ticket?",
@@ -50,5 +50,13 @@
     "APP_ACCEPTED_DM": "🎉 ¡Felicidades! Tu aplicación para **{name}** en el servidor **{guildName}** ha sido ACEPTADA.",
     "APP_DENIED_DM": "❌ Lo sentimos, tu aplicación para **{name}** en el servidor **{guildName}** ha sido RECHAZADA.",
     "APP_ACCEPTED_LOG": "✅ Aplicación Aceptada por {admin}",
-    "APP_DENIED_LOG": "❌ Aplicación Rechazada por {admin}"
+    "APP_DENIED_LOG": "❌ Aplicación Rechazada por {admin}",
+
+    "FAQ_NOT_FOUND": "❌ No se encontró esa pregunta frecuente.",
+    "FAQ_FOOTER": "Preguntas Frecuentes — Tenancy",
+
+    "VERIFY_NOT_CONFIGURED": "❌ El sistema de verificación no está configurado en este servidor.",
+    "VERIFY_ALREADY_VERIFIED": "✅ Ya estás verificado.",
+    "VERIFY_SUCCESS": "✅ ¡Te has verificado correctamente! Ya tienes acceso al servidor.",
+    "VERIFY_ROLE_ERROR": "❌ No se pudo asignar el rol. Contacta a un administrador."
 }

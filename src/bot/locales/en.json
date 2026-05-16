@@ -1,6 +1,6 @@
 {
     "TICKET_BANNED": "❌ You are not allowed to open tickets in this server.",
-    "TICKET_LIMIT_REACHED": "🔒 **Free Limit Reached**\nThis server has exceeded the 50 tickets limit. The administrator must upgrade to **Tenancy Premium** to unlock unlimited tickets.",
+    "TICKET_LIMIT_REACHED": "🔒 **The free limit has been reached**\nThis server has exceeded the monthly limit of 50 tickets. The administrator must upgrade to **Tenancy Premium** to unlock unlimited tickets.",
     "TICKET_ALREADY_OPEN": "❌ You already have an open ticket: {channel}",
     "TICKET_MODAL_TITLE": "📝 New Ticket — {category}",
     "TICKET_MODAL_SUBJECT": "What is the reason for your ticket?",
@@ -50,5 +50,13 @@
     "APP_ACCEPTED_DM": "🎉 Congratulations! Your application for **{name}** in **{guildName}** has been ACCEPTED.",
     "APP_DENIED_DM": "❌ We are sorry, your application for **{name}** in **{guildName}** has been DENIED.",
     "APP_ACCEPTED_LOG": "✅ Application Accepted by {admin}",
-    "APP_DENIED_LOG": "❌ Application Denied by {admin}"
+    "APP_DENIED_LOG": "❌ Application Denied by {admin}",
+
+    "FAQ_NOT_FOUND": "❌ That FAQ was not found.",
+    "FAQ_FOOTER": "Frequently Asked Questions — Tenancy",
+
+    "VERIFY_NOT_CONFIGURED": "❌ The verification system is not configured on this server.",
+    "VERIFY_ALREADY_VERIFIED": "✅ You are already verified.",
+    "VERIFY_SUCCESS": "✅ You have been verified! You now have access to the server.",
+    "VERIFY_ROLE_ERROR": "❌ Could not assign the role. Contact an administrator."
 }

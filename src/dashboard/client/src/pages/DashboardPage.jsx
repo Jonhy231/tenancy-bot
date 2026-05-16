@@ -4,10 +4,17 @@ import Sidebar from '../components/layout/Sidebar'
 import Topbar from '../components/layout/Topbar'
 import OverviewView from '../components/views/OverviewView'
 import TicketsView from '../components/views/TicketsView'
+import ModerationView from '../components/views/ModerationView'
+import LevelsView from '../components/views/LevelsView'
+import FAQView from '../components/views/FAQView'
+import AutoResponseView from '../components/views/AutoResponseView'
+import PollsView from '../components/views/PollsView'
+import VerificationView from '../components/views/VerificationView'
+import PremiumView from '../components/views/PremiumView'
+import TicketLogsView from '../components/views/TicketLogsView'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast, LoadingScreen } from '../components/ui/UI'
 import { api } from '../api'
-
 /* Placeholder for views not yet implemented */
 function ComingSoon({ title }) {
   return (
@@ -261,14 +268,14 @@ export default function DashboardPage() {
             <Route index element={<Navigate to="overview" replace />} />
             <Route path="overview"      element={<OverviewView guildId={guildId} />} />
             <Route path="tickets"       element={<TicketsView guildId={guildId} />} />
-            <Route path="logs"          element={<ComingSoon title="Ticket Logs" />} />
-            <Route path="moderation"    element={<ComingSoon title="Moderación" />} />
-            <Route path="levels"        element={<ComingSoon title="Levels & XP" />} />
-            <Route path="faq"           element={<ComingSoon title="FAQ Panels" />} />
-            <Route path="autoresponse"  element={<ComingSoon title="Auto Responses" />} />
-            <Route path="polls"         element={<ComingSoon title="Polls" />} />
-            <Route path="verification"  element={<ComingSoon title="Verification" />} />
-            <Route path="premium"       element={<ComingSoon title="Premium" />} />
+            <Route path="logs"          element={<TicketLogsView guildId={guildId} />} />
+            <Route path="moderation"    element={<ModerationView guildId={guildId} />} />
+            <Route path="levels"        element={<LevelsView guildId={guildId} />} />
+            <Route path="faq"           element={<FAQView guildId={guildId} />} />
+            <Route path="autoresponse"  element={<AutoResponseView guildId={guildId} />} />
+            <Route path="polls"         element={<PollsView guildId={guildId} />} />
+            <Route path="verification"  element={<VerificationView guildId={guildId} />} />
+            <Route path="premium"       element={<PremiumView guildId={guildId} />} />
             <Route path="dev"           element={user?.isDev ? <DevView guildId={guildId} /> : <Navigate to="overview" />} />
             <Route path="*"             element={<Navigate to="overview" replace />} />
           </Routes>

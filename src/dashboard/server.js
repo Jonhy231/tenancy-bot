@@ -253,6 +253,13 @@ export function startDashboard(client) {
                 language: config.language,
                 ticketMode: config.ticketMode,
                 customPanel: config.customPanel,
+                moderation: config.moderation,
+                levels: config.levels,
+                faq: config.faq,
+                faqPanelChannelId: config.faqPanelChannelId,
+                faqPanelMessageId: config.faqPanelMessageId,
+                autoResponses: config.autoResponses,
+                verification: config.verification,
                 applicationsChannelId: config.applicationsChannelId,
                 applicationsPanelChannelId: config.applicationsPanelChannelId,
                 applicationsPanelMessageId: config.applicationsPanelMessageId,
@@ -365,6 +372,8 @@ export function startDashboard(client) {
             "panelChannelId", "panelEmbed", "ticketGreeting",
             "language", "applicationsChannelId", "applicationsPanelChannelId", "applications",
             "ticketMode", "customPanel",
+            "moderation", "levels", "faq", "faqPanelChannelId",
+            "autoResponses", "verification",
         ];
 
         const updates = {};
@@ -706,6 +715,320 @@ export function startDashboard(client) {
         } catch (error) {
             console.error("❌ Error al enviar panel de aplicaciones:", error);
             res.status(500).json({ error: "Error al enviar el panel de aplicaciones. Verifica que el bot pueda ver y enviar mensajes en ese canal." });
+        }
+    });
+
+    // ══════════════════════════════════════
+    // API: Leaderboard de Niveles
+    // ══════════════════════════════════════
+    app.get("/api/server/:guildId/levels/leaderboard", async (req, res) => {
+        if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
+        const { guildId } = req.params;
+        if (!(await hasAccess(req.session.user, guildId))) return res.status(403).json({ error: "Sin permisos" });
+
+        try {
+            const Level = (await import("../database/models/Level.js")).default;
+            const top = await Level.find({ guildId }).sort({ xp: -1 }).limit(50).lean();
+            res.json(top);
+        } catch (error) {
+            console.error("Error leaderboard:", error);
+            res.status(500).json({ error: "Error al obtener leaderboard" });
+        }
+    });
+
+    // ══════════════════════════════════════
+    // API: Dev — Simular XP
+    // ══════════════════════════════════════
+    app.post("/api/dev/simulate-xp/:guildId", async (req, res) => {
+        if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
+        const DEV_ID = "601394346826268673";
+        if (req.session.user.id !== DEV_ID) return res.status(403).json({ error: "Acceso denegado" });
+
+        const { guildId } = req.params;
+        const { userId, xp = 100 } = req.body;
+        if (!userId) return res.status(400).json({ error: "userId requerido" });
+
+        try {
+            const Level = (await import("../database/models/Level.js")).default;
+            let userLevel = await Level.findOne({ guildId, userId });
+            if (!userLevel) {
+                userLevel = new Level({ guildId, userId, userName: userId });
+            }
+            userLevel.xp += Math.min(Math.max(parseInt(xp) || 100, 1), 10000);
+            userLevel.level = Math.floor(0.1 * Math.sqrt(userLevel.xp));
+            await userLevel.save();
+            res.json({ success: true, xp: userLevel.xp, level: userLevel.level });
+        } catch (error) {
+            res.status(500).json({ error: "Error al simular XP" });
+        }
+    });
+
+    // ══════════════════════════════════════
+    // API: FAQ Panel — Enviar a Discord
+    // ══════════════════════════════════════
+    app.post("/api/server/:guildId/faq/send", async (req, res) => {
+        if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
+        const { guildId } = req.params;
+        if (!(await hasAccess(req.session.user, guildId))) return res.status(403).json({ error: "Sin permisos" });
+
+        const { channelId } = req.body;
+        if (!channelId) return res.status(400).json({ error: "channelId requerido" });
+
+        try {
+            const config = await getGuildConfig(guildId);
+            if (!config.faq || config.faq.length === 0) {
+                return res.status(400).json({ error: "No hay FAQs configuradas" });
+            }
+
+            const guild = client.guilds.cache.get(guildId);
+            if (!guild) return res.status(404).json({ error: "Servidor no encontrado" });
+            const channel = guild.channels.cache.get(channelId);
+            if (!channel) return res.status(404).json({ error: "Canal no encontrado" });
+
+            const { StringSelectMenuBuilder, ActionRowBuilder, EmbedBuilder } = await import("discord.js");
+
+            const embed = new EmbedBuilder()
+                .setTitle("❓ Preguntas Frecuentes")
+                .setDescription("Selecciona una pregunta del menú de abajo para ver la respuesta.")
+                .setColor(0x5865F2);
+
+            const options = config.faq.slice(0, 25).map(f => ({
+                label: f.question.substring(0, 100),
+                value: f.id,
+                emoji: f.emoji || "❓",
+                description: f.answer.substring(0, 100),
+            }));
+
+            const selectMenu = new StringSelectMenuBuilder()
+                .setCustomId("faq_select")
+                .setPlaceholder("Selecciona una pregunta...")
+                .addOptions(options);
+
+            const row = new ActionRowBuilder().addComponents(selectMenu);
+
+            let messageId = config.faqPanelMessageId;
+            if (messageId) {
+                try {
+                    const msg = await channel.messages.fetch(messageId);
+                    await msg.edit({ embeds: [embed], components: [row] });
+                } catch {
+                    const sent = await channel.send({ embeds: [embed], components: [row] });
+                    messageId = sent.id;
+                }
+            } else {
+                const sent = await channel.send({ embeds: [embed], components: [row] });
+                messageId = sent.id;
+            }
+
+            await updateGuildConfig(guildId, { faqPanelChannelId: channelId, faqPanelMessageId: messageId });
+            res.json({ success: true, messageId });
+        } catch (error) {
+            console.error("Error enviando FAQ panel:", error);
+            res.status(500).json({ error: "Error al enviar FAQ panel" });
+        }
+    });
+
+    // ══════════════════════════════════════
+    // API: Encuestas (Polls)
+    // ══════════════════════════════════════
+    const Poll = (await import("../database/models/Poll.js")).default;
+    const { buildPollMessage } = await import("../bot/handlers/pollHandler.js");
+
+    // Listar encuestas del servidor
+    app.get("/api/server/:guildId/polls", async (req, res) => {
+        if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
+        const { guildId } = req.params;
+        if (!(await hasAccess(req.session.user, guildId))) return res.status(403).json({ error: "Sin permisos" });
+
+        try {
+            const polls = await Poll.find({ guildId }).sort({ createdAt: -1 }).limit(30).lean();
+            res.json(polls);
+        } catch (error) {
+            res.status(500).json({ error: "Error al obtener encuestas" });
+        }
+    });
+
+    // Crear y enviar encuesta
+    app.post("/api/server/:guildId/polls", async (req, res) => {
+        if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
+        const { guildId } = req.params;
+        if (!(await hasAccess(req.session.user, guildId))) return res.status(403).json({ error: "Sin permisos" });
+
+        const { question, options, channelId, isAnonymous = false, durationHours } = req.body;
+        if (!question || !options || options.length < 2 || !channelId) {
+            return res.status(400).json({ error: "question, options (min 2), y channelId requeridos" });
+        }
+
+        try {
+            const guild = client.guilds.cache.get(guildId);
+            if (!guild) return res.status(404).json({ error: "Servidor no encontrado" });
+            const channel = guild.channels.cache.get(channelId);
+            if (!channel) return res.status(404).json({ error: "Canal no encontrado" });
+
+            const poll = new Poll({
+                guildId,
+                question,
+                options: options.slice(0, 10).map(o => ({
+                    label: o.label,
+                    emoji: o.emoji || "",
+                    votes: 0,
+                })),
+                isAnonymous,
+                createdBy: req.session.user.id,
+                endsAt: durationHours ? new Date(Date.now() + durationHours * 3600000) : null,
+            });
+
+            await poll.save();
+
+            const message = buildPollMessage(poll);
+            const sent = await channel.send(message);
+
+            poll.channelId = channelId;
+            poll.messageId = sent.id;
+            await poll.save();
+
+            res.json({ success: true, pollId: poll._id });
+        } catch (error) {
+            console.error("Error creando poll:", error);
+            res.status(500).json({ error: "Error al crear encuesta" });
+        }
+    });
+
+    // Cerrar encuesta
+    app.post("/api/server/:guildId/polls/:pollId/close", async (req, res) => {
+        if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
+        const { guildId, pollId } = req.params;
+        if (!(await hasAccess(req.session.user, guildId))) return res.status(403).json({ error: "Sin permisos" });
+
+        try {
+            const poll = await Poll.findOne({ _id: pollId, guildId });
+            if (!poll) return res.status(404).json({ error: "Encuesta no encontrada" });
+
+            poll.active = false;
+            await poll.save();
+
+            // Actualizar mensaje en Discord (quitar botones)
+            if (poll.channelId && poll.messageId) {
+                const guild = client.guilds.cache.get(guildId);
+                const channel = guild?.channels.cache.get(poll.channelId);
+                if (channel) {
+                    try {
+                        const msg = await channel.messages.fetch(poll.messageId);
+                        const { EmbedBuilder } = await import("discord.js");
+                        const totalVotes = poll.options.reduce((s, o) => s + o.votes, 0);
+                        const results = poll.options.map((opt, i) => {
+                            const pct = totalVotes > 0 ? Math.round((opt.votes / totalVotes) * 100) : 0;
+                            const bar = "█".repeat(Math.round(pct / 5)) + "░".repeat(20 - Math.round(pct / 5));
+                            return `${opt.emoji || `${i+1}️⃣`} **${opt.label}**\n${bar} ${pct}% (${opt.votes})`;
+                        }).join("\n\n");
+
+                        const embed = new EmbedBuilder()
+                            .setTitle(`📊 ${poll.question} — FINALIZADA`)
+                            .setDescription(results)
+                            .setColor(0x95a5a6)
+                            .setFooter({ text: `${totalVotes} votos totales • Encuesta cerrada` });
+
+                        await msg.edit({ embeds: [embed], components: [] });
+                    } catch (e) {}
+                }
+            }
+
+            res.json({ success: true });
+        } catch (error) {
+            res.status(500).json({ error: "Error al cerrar encuesta" });
+        }
+    });
+
+    // ══════════════════════════════════════
+    // API: Verificación — Enviar Panel
+    // ══════════════════════════════════════
+    app.post("/api/server/:guildId/verification/send", async (req, res) => {
+        if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
+        const { guildId } = req.params;
+        if (!(await hasAccess(req.session.user, guildId))) return res.status(403).json({ error: "Sin permisos" });
+
+        const { channelId } = req.body;
+        if (!channelId) return res.status(400).json({ error: "channelId requerido" });
+
+        try {
+            const config = await getGuildConfig(guildId);
+            const v = config.verification;
+            if (!v?.roleId) return res.status(400).json({ error: "Configura un rol de verificación primero" });
+
+            const guild = client.guilds.cache.get(guildId);
+            if (!guild) return res.status(404).json({ error: "Servidor no encontrado" });
+            const channel = guild.channels.cache.get(channelId);
+            if (!channel) return res.status(404).json({ error: "Canal no encontrado" });
+
+            const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = await import("discord.js");
+
+            const embed = new EmbedBuilder()
+                .setTitle(v.embedTitle || "✅ Verificación")
+                .setDescription(v.embedDescription || "Haz clic en el botón de abajo para verificarte.")
+                .setColor(parseInt((v.embedColor || "#57F287").replace("#", ""), 16));
+
+            const btn = new ButtonBuilder()
+                .setCustomId("verify_button")
+                .setLabel(v.buttonLabel || "Verificarme")
+                .setStyle(ButtonStyle.Success);
+            if (v.buttonEmoji) {
+                try { btn.setEmoji(v.buttonEmoji); } catch (e) {}
+            }
+            const row = new ActionRowBuilder().addComponents(btn);
+
+            let messageId = v.messageId;
+            if (messageId) {
+                try {
+                    const msg = await channel.messages.fetch(messageId);
+                    await msg.edit({ embeds: [embed], components: [row] });
+                } catch {
+                    const sent = await channel.send({ embeds: [embed], components: [row] });
+                    messageId = sent.id;
+                }
+            } else {
+                const sent = await channel.send({ embeds: [embed], components: [row] });
+                messageId = sent.id;
+            }
+
+            await updateGuildConfig(guildId, {
+                "verification.channelId": channelId,
+                "verification.messageId": messageId,
+            });
+
+            res.json({ success: true, messageId });
+        } catch (error) {
+            console.error("Error enviando panel de verificación:", error);
+            res.status(500).json({ error: "Error al enviar panel" });
+        }
+    });
+
+    // ══════════════════════════════════════
+    // API: Ticket Logs
+    // ══════════════════════════════════════
+    app.get("/api/server/:guildId/ticket-logs", async (req, res) => {
+        if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
+        const { guildId } = req.params;
+        if (!(await hasAccess(req.session.user, guildId))) return res.status(403).json({ error: "Sin permisos" });
+
+        const { status, limit = 50, page = 1 } = req.query;
+        const query = { guildId };
+        if (status === "open") query.status = "open";
+        else if (status === "closed") query.status = "closed";
+
+        try {
+            const Ticket = (await import("../database/models/Ticket.js")).default;
+            const skip = (parseInt(page) - 1) * parseInt(limit);
+            const total = await Ticket.countDocuments(query);
+            const tickets = await Ticket.find(query)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit))
+                .lean();
+
+            res.json({ tickets, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
+        } catch (error) {
+            console.error("Error ticket logs:", error);
+            res.status(500).json({ error: "Error al obtener logs" });
         }
     });
 

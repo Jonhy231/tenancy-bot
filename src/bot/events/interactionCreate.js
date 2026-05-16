@@ -1,6 +1,9 @@
 import { InteractionType, MessageFlags } from "discord.js";
 import { handleTicketSelect, handleTicketModal, handleTicketCategoryButton, handleTicketManageButton, handleAddUserModal } from "../handlers/ticketHandler.js";
 import { handleApplicationButton, handleApplicationModal, handleApplicationDecision } from "../handlers/applicationHandler.js";
+import { handleFaqSelect } from "../handlers/faqHandler.js";
+import { handlePollVote } from "../handlers/pollHandler.js";
+import { handleVerifyButton } from "../handlers/verificationHandler.js";
 import Ticket from "../../database/models/Ticket.js";
 import { getGuildConfig } from "../../database/cache.js";
 import { t } from "../utils/i18n.js";
@@ -28,6 +31,10 @@ export async function handleInteraction(interaction) {
             await handleTicketSelect(interaction);
             return;
         }
+        if (interaction.customId === "faq_select") {
+            await handleFaqSelect(interaction);
+            return;
+        }
     }
 
     // ═══ 3. Modales ═══
@@ -50,17 +57,17 @@ export async function handleInteraction(interaction) {
     if (interaction.isButton()) {
         // Ticket Category Buttons (panel)
         if (interaction.customId.startsWith("ticket_cat_")) {
-            await handleTicketCategoryButton(interaction); // <--- CAMBIO AQUÍ
+            await handleTicketCategoryButton(interaction);
             return;
         }
 
         // Tickets Management
         if (["ticket_close", "ticket_claim", "ticket_add"].some(a => interaction.customId.startsWith(a))) {
-            await handleTicketManageButton(interaction); // <--- CAMBIO AQUÍ
+            await handleTicketManageButton(interaction);
             return;
         }
 
-        // Appplication Start
+        // Application Start
         if (interaction.customId.startsWith("app_start_")) {
             await handleApplicationButton(interaction);
             return;
@@ -69,6 +76,18 @@ export async function handleInteraction(interaction) {
         // Application Decision
         if (interaction.customId.startsWith("app_accept_") || interaction.customId.startsWith("app_deny_")) {
             await handleApplicationDecision(interaction);
+            return;
+        }
+
+        // Poll Vote
+        if (interaction.customId.startsWith("poll_vote_")) {
+            await handlePollVote(interaction);
+            return;
+        }
+
+        // Verification Button
+        if (interaction.customId === "verify_button") {
+            await handleVerifyButton(interaction);
             return;
         }
 
