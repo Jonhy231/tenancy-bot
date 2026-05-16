@@ -33,8 +33,9 @@ try {
     fs.rmSync(clientModules, { recursive: true, force: true })
   }
 
-  // Instalar dependencias (sin flags que puedan saltarse devDependencies)
-  run('npm install', clientDir)
+  // Instalar TODAS las dependencias (incluyendo devDependencies para vite)
+  // Railway pone NODE_ENV=production que omite devDeps por defecto
+  run('npm install --include=dev', clientDir)
 
   // Build de producción
   run('npm run build', clientDir)
