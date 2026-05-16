@@ -4,6 +4,9 @@
   "description": "Tenancy — Bot de tickets multi-tenant para Discord con dashboard web premium",
   "type": "module",
   "main": "src/bot/index.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "start": "node src/bot/index.js",
     "build": "node build.mjs",
