@@ -251,6 +251,8 @@ export function startDashboard(client) {
                 categories: config.categories,
                 bannedUsers: config.bannedUsers,
                 language: config.language,
+                ticketMode: config.ticketMode,
+                customPanel: config.customPanel,
                 applicationsChannelId: config.applicationsChannelId,
                 applicationsPanelChannelId: config.applicationsPanelChannelId,
                 applicationsPanelMessageId: config.applicationsPanelMessageId,
@@ -732,6 +734,49 @@ export function startDashboard(client) {
             res.json({ success: true, isPremium });
         } catch (error) {
             res.status(500).json({ error: "Error al activar premium" });
+        }
+    });
+
+    // ══════════════════════════════════════
+    // API: Dev Terminal — Ver Usage de Servidores
+    // ══════════════════════════════════════
+    app.get("/api/dev/servers", async (req, res) => {
+        if (!req.session.user) return res.status(401).json({ error: "No autenticado" });
+
+        const DEV_ID = "601394346826268673";
+        if (req.session.user.id !== DEV_ID) {
+            return res.status(403).json({ error: "Acceso denegado. Solo Developer." });
+        }
+
+        try {
+            const guilds = await Guild.find({}).lean();
+            const now = new Date();
+
+            const serversData = guilds.map(g => {
+                const resetDate = g.monthlyResetDate ? new Date(g.monthlyResetDate) : new Date(0);
+                const needsReset = now.getMonth() !== resetDate.getMonth() || now.getFullYear() !== resetDate.getFullYear();
+
+                const guildObj = client.guilds.cache.get(g.guildId);
+                return {
+                    guildId: g.guildId,
+                    guildName: guildObj?.name || g.guildName || "Desconocido",
+                    guildIcon: guildObj?.iconURL({ size: 64 }) || null,
+                    memberCount: guildObj?.memberCount || 0,
+                    isPremium: g.isPremium || false,
+                    totalTicketsCreated: g.totalTicketsCreated || 0,
+                    monthlyTicketsUsed: needsReset ? 0 : (g.monthlyTicketsUsed || 0),
+                    monthlyLimit: g.isPremium ? "∞" : 50,
+                    monthlyResetDate: g.monthlyResetDate || null,
+                    categoriesCount: g.categories?.length || 0,
+                    ticketMode: g.ticketMode || "classic",
+                };
+            });
+
+            serversData.sort((a, b) => b.monthlyTicketsUsed - a.monthlyTicketsUsed);
+            res.json({ servers: serversData, total: serversData.length });
+        } catch (error) {
+            console.error("Error en dev/servers:", error);
+            res.status(500).json({ error: "Error al obtener servidores" });
         }
     });
 

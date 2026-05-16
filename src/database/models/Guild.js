@@ -77,6 +77,8 @@ const guildSchema = new mongoose.Schema({
     // ═══ Contadores y Límites ═══
     ticketCounter: { type: Number, default: 0 },
     totalTicketsCreated: { type: Number, default: 0 },
+    monthlyTicketsUsed: { type: Number, default: 0 },
+    monthlyResetDate: { type: Date, default: () => new Date() },
     
     // ═══ Modo del Panel de Tickets ═══
     ticketMode: { type: String, enum: ["classic", "custom"], default: "classic" },

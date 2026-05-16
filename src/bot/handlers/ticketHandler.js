@@ -31,7 +31,15 @@ export async function handleTicketSelect(interaction) {
         });
     }
 
-    if (!guildConfig.isPremium && guildConfig.totalTicketsCreated >= 50) {
+    // ── Auto-reset mensual del contador ──
+    const now = new Date();
+    const resetDate = guildConfig.monthlyResetDate ? new Date(guildConfig.monthlyResetDate) : new Date(0);
+    if (now.getMonth() !== resetDate.getMonth() || now.getFullYear() !== resetDate.getFullYear()) {
+        await updateGuildConfig(interaction.guildId, { monthlyTicketsUsed: 0, monthlyResetDate: now });
+        guildConfig.monthlyTicketsUsed = 0;
+    }
+
+    if (!guildConfig.isPremium && (guildConfig.monthlyTicketsUsed || 0) >= 50) {
         return interaction.reply({
             content: t(lang, "TICKET_LIMIT_REACHED"),
             flags: [MessageFlags.Ephemeral],
@@ -90,7 +98,15 @@ export async function handleTicketCategoryButton(interaction) {
         return interaction.reply({ content: t(lang, "TICKET_BANNED"), flags: [MessageFlags.Ephemeral] });
     }
 
-    if (!guildConfig.isPremium && guildConfig.totalTicketsCreated >= 50) {
+    // ── Auto-reset mensual del contador ──
+    const now = new Date();
+    const resetDate = guildConfig.monthlyResetDate ? new Date(guildConfig.monthlyResetDate) : new Date(0);
+    if (now.getMonth() !== resetDate.getMonth() || now.getFullYear() !== resetDate.getFullYear()) {
+        await updateGuildConfig(interaction.guildId, { monthlyTicketsUsed: 0, monthlyResetDate: now });
+        guildConfig.monthlyTicketsUsed = 0;
+    }
+
+    if (!guildConfig.isPremium && (guildConfig.monthlyTicketsUsed || 0) >= 50) {
         return interaction.reply({ content: t(lang, "TICKET_LIMIT_REACHED"), flags: [MessageFlags.Ephemeral] });
     }
 
@@ -167,9 +183,11 @@ export async function handleTicketModal(interaction) {
 
     const newCount = (guildConfig.ticketCounter || 0) + 1;
     const newTotal = (guildConfig.totalTicketsCreated || 0) + 1;
+    const newMonthly = (guildConfig.monthlyTicketsUsed || 0) + 1;
     await updateGuildConfig(interaction.guildId, {
         ticketCounter: newCount,
-        totalTicketsCreated: newTotal
+        totalTicketsCreated: newTotal,
+        monthlyTicketsUsed: newMonthly,
     });
 
     const ticketName = `${categoryEmoji}┃ticket-${String(newCount).padStart(4, "0")}`;
