@@ -81,23 +81,17 @@ export async function handleTicketSelect(interaction) {
 // 1b. HANDLER: Botón de Categoría → Muestra Modal (NOMBRE CAMBIADO)
 // ══════════════════════════════════════════════════════
 
-export async function handleTicketCategoryButton(interaction) { // <--- CAMBIO AQUÍ
+export async function handleTicketCategoryButton(interaction) {
     const guildConfig = await getGuildConfig(interaction.guildId);
-    const categoryId = interaction.customId.replace("ticket_cat_", "");
+    const buttonOrCatId = interaction.customId.replace("ticket_cat_", "");
     const lang = guildConfig.language || "es";
 
     if (guildConfig.bannedUsers.includes(interaction.user.id)) {
-        return interaction.reply({
-            content: t(lang, "TICKET_BANNED"),
-            flags: [MessageFlags.Ephemeral],
-        });
+        return interaction.reply({ content: t(lang, "TICKET_BANNED"), flags: [MessageFlags.Ephemeral] });
     }
 
     if (!guildConfig.isPremium && guildConfig.totalTicketsCreated >= 50) {
-        return interaction.reply({
-            content: t(lang, "TICKET_LIMIT_REACHED"),
-            flags: [MessageFlags.Ephemeral],
-        });
+        return interaction.reply({ content: t(lang, "TICKET_LIMIT_REACHED"), flags: [MessageFlags.Ephemeral] });
     }
 
     const existingTicket = await Ticket.findOne({
@@ -105,7 +99,6 @@ export async function handleTicketCategoryButton(interaction) { // <--- CAMBIO A
         userId: interaction.user.id,
         status: "open",
     });
-
     if (existingTicket) {
         return interaction.reply({
             content: t(lang, "TICKET_ALREADY_OPEN", { channel: `<#${existingTicket.channelId}>` }),
@@ -113,8 +106,32 @@ export async function handleTicketCategoryButton(interaction) { // <--- CAMBIO A
         });
     }
 
-    const category = guildConfig.categories.find(c => c.id === categoryId);
-    const categoryName = category ? category.name : "General";
+    // ── Resolución de categoría: Classic vs Custom ──
+    let categoryId = buttonOrCatId;
+    let categoryName = "General";
+    let categoryEmoji = "🎫";
+
+    if (guildConfig.ticketMode === "custom" && guildConfig.customPanel?.buttons?.length > 0) {
+        // En modo custom, buttonOrCatId es el ID del botón del customPanel
+        const btn = guildConfig.customPanel.buttons.find(b => b.id === buttonOrCatId);
+        if (btn) {
+            categoryEmoji = btn.emoji || "🎫";
+            if (btn.categoryId) {
+                // Vincular al categoryId configurado
+                const linkedCat = guildConfig.categories.find(c => c.id === btn.categoryId);
+                categoryId = btn.categoryId;
+                categoryName = linkedCat ? linkedCat.name : btn.label;
+            } else {
+                // Sin categoría vinculada: usar el label del botón
+                categoryId = btn.id;
+                categoryName = btn.label;
+            }
+        }
+    } else {
+        // Modo clásico: buttonOrCatId ya es el categoryId
+        const category = guildConfig.categories.find(c => c.id === buttonOrCatId);
+        if (category) { categoryName = category.name; categoryEmoji = category.emoji || "🎫"; }
+    }
 
     const modal = new ModalBuilder()
         .setCustomId(`ticket_modal_${categoryId}`)

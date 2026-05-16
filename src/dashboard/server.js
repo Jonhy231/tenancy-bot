@@ -1,6 +1,7 @@
 import express from "express";
 import session from "express-session";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 import { getGuildConfig, updateGuildConfig, invalidateCache } from "../database/cache.js";
 import Ticket from "../database/models/Ticket.js";
@@ -28,12 +29,15 @@ export function startDashboard(client) {
 
     // ═══ Middleware ═══
     app.use(express.json());
+    // Static: React dashboard build
+    app.use("/dashboard", express.static(path.join(__dirname, "dist")));
+    // Static: legacy public (landing page, etc.)
     app.use(express.static(path.join(__dirname, "public")));
     app.use(session({
         secret: process.env.SESSION_SECRET || "tenancy-bot-secret",
         resave: false,
         saveUninitialized: false,
-        cookie: { maxAge: 24 * 60 * 60 * 1000 }, // 24 horas
+        cookie: { maxAge: 24 * 60 * 60 * 1000 },
     }));
 
     // ══════════════════════════════════════
@@ -107,7 +111,7 @@ export function startDashboard(client) {
                 accessToken: tokenData.access_token,
             };
 
-            res.redirect("/dashboard.html");
+            res.redirect("/dashboard");
         } catch (error) {
             console.error("❌ Error en OAuth2:", error);
             res.redirect("/?error=auth_failed");
@@ -353,11 +357,12 @@ export function startDashboard(client) {
         });
 
         const allowedFields = [
-            "supportRoles", 
+            "supportRoles",
             ...(nativeAccess ? ["adminRoles", "dashboardRoles"] : []),
             "ticketCategoryId", "logChannelId", "transcriptChannelId",
             "panelChannelId", "panelEmbed", "ticketGreeting",
             "language", "applicationsChannelId", "applicationsPanelChannelId", "applications",
+            "ticketMode", "customPanel",
         ];
 
         const updates = {};
@@ -477,44 +482,86 @@ export function startDashboard(client) {
                 return res.status(404).json({ error: "No se encontró el canal configurado. Verifica que existe y el bot tiene acceso." });
             }
 
-            // ═══ Construir Embed ═══
-            const panel = config.panelEmbed || {};
-            const embed = new EmbedBuilder()
-                .setTitle(panel.title || "🎫 Sistema de Tickets")
-                .setDescription(panel.description || "Selecciona una categoría para abrir un ticket.\nNuestro equipo te atenderá lo antes posible.")
-                .setColor(parseInt((panel.color || "#5865F2").replace("#", ""), 16))
-                .setTimestamp();
+            // ═══ Construir Mensaje según modo ═══
+            let messagePayload;
 
-            if (panel.thumbnail) embed.setThumbnail(panel.thumbnail);
-            if (panel.image) embed.setImage(panel.image);
+            if (config.ticketMode === "custom" && config.customPanel?.buttons?.length > 0) {
+                // —— Modo Personalizado: Embed con botón (Contact System) ——
+                const cp = config.customPanel;
+                const btnStyleMap = { primary: ButtonStyle.Primary, secondary: ButtonStyle.Secondary, success: ButtonStyle.Success, danger: ButtonStyle.Danger };
 
-            if (config.isPremium) {
-                if (panel.footer) embed.setFooter({ text: panel.footer });
+                const embed = new EmbedBuilder()
+                    .setTitle(cp.title || "Contact System")
+                    .setDescription(cp.description || "Selecciona una opción.")
+                    .setColor(parseInt((cp.color || "#5865F2").replace("#", ""), 16));
+
+                if (cp.banner) embed.setImage(cp.banner);
+
+                // Campo de descripciones (izquierda)
+                const descLines = cp.buttons
+                    .filter(b => b.description)
+                    .map(b => `**${b.label}:** ${b.description}`)
+                    .join("\n");
+                if (descLines) embed.addFields({ name: "DESCRIPCIÓN", value: descLines, inline: false });
+
+                if (config.isPremium && cp.footer) embed.setFooter({ text: cp.footer });
+                else if (!config.isPremium) embed.setFooter({ text: "⚡ Powered by Tenancy" });
+
+                // Botón rows (máximo 5 por fila)
+                const rows = [];
+                for (let i = 0; i < cp.buttons.length; i += 5) {
+                    const row = new ActionRowBuilder();
+                    cp.buttons.slice(i, i + 5).forEach(btn => {
+                        const b = new ButtonBuilder()
+                            .setCustomId(`ticket_cat_${btn.id}`)
+                            .setLabel(btn.label.substring(0, 80))
+                            .setStyle(btnStyleMap[btn.color] || ButtonStyle.Primary);
+                        if (btn.emoji) { try { b.setEmoji(btn.emoji); } catch (_) {} }
+                        row.addComponents(b);
+                    });
+                    rows.push(row);
+                }
+
+                messagePayload = { embeds: [embed], components: rows };
+
             } else {
-                embed.setFooter({ text: "⚡ Powered by Tenancy" });
+                // —— Modo Clásico: Embed + Select Menu ——
+                if (!config.categories || config.categories.length === 0) {
+                    return res.status(400).json({ error: "Debes crear al menos una categoría de tickets antes de enviar el panel" });
+                }
+
+                const panel = config.panelEmbed || {};
+                const embed = new EmbedBuilder()
+                    .setTitle(panel.title || "🎫 Sistema de Tickets")
+                    .setDescription(panel.description || "Selecciona una categoría para abrir un ticket.")
+                    .setColor(parseInt((panel.color || "#5865F2").replace("#", ""), 16))
+                    .setTimestamp();
+
+                if (panel.thumbnail) embed.setThumbnail(panel.thumbnail);
+                if (panel.image) embed.setImage(panel.image);
+                if (config.isPremium && panel.footer) embed.setFooter({ text: panel.footer });
+                else embed.setFooter({ text: "⚡ Powered by Tenancy" });
+
+                // Campos del embed
+                if (panel.fields && panel.fields.length > 0) {
+                    embed.addFields(panel.fields.map(f => ({ name: f.name || "\u200b", value: f.value || "\u200b", inline: f.inline || false })));
+                }
+
+                const selectMenu = new StringSelectMenuBuilder()
+                    .setCustomId("ticket_category_select")
+                    .setPlaceholder("📂 Selecciona una categoría...");
+
+                for (const cat of config.categories) {
+                    const option = new StringSelectMenuOptionBuilder()
+                        .setLabel(cat.name)
+                        .setValue(cat.id)
+                        .setDescription(cat.description || "Soporte");
+                    if (cat.emoji) option.setEmoji(cat.emoji);
+                    selectMenu.addOptions(option);
+                }
+
+                messagePayload = { embeds: [embed], components: [new ActionRowBuilder().addComponents(selectMenu)] };
             }
-
-            // ═══ Construir Select Menu ═══
-            const selectMenu = new StringSelectMenuBuilder()
-                .setCustomId("ticket_category_select")
-                .setPlaceholder("📂 Selecciona una categoría...");
-
-            for (const cat of config.categories) {
-                const option = new StringSelectMenuOptionBuilder()
-                    .setLabel(cat.name)
-                    .setValue(cat.id)
-                    .setDescription(cat.description || "Soporte");
-
-                if (cat.emoji) option.setEmoji(cat.emoji);
-                selectMenu.addOptions(option);
-            }
-
-            const row = new ActionRowBuilder().addComponents(selectMenu);
-
-            const messagePayload = {
-                embeds: [embed],
-                components: [row],
-            };
 
             // ═══ Enviar o Editar ═══
             let messageId = config.panelMessageId;
@@ -717,10 +764,15 @@ export function startDashboard(client) {
         res.status(200).send("OK");
     });
 
-    // ═══ SPA fallback ═══
+    // ═══ Serve React Dashboard SPA ═══
     app.get("/dashboard*", (req, res) => {
-        res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+        const distIndex = path.join(__dirname, "dist", "index.html");
+        const legacyHtml = path.join(__dirname, "public", "dashboard.html");
+        res.sendFile(fs.existsSync(distIndex) ? distIndex : legacyHtml);
     });
+
+    // ═══ Landing page ═══
+    app.get("/", (req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
 
     // ═══ Iniciar ═══
     app.listen(PORT, () => {

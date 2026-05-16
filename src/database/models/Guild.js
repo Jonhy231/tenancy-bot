@@ -7,6 +7,24 @@ const categorySchema = new mongoose.Schema({
     description: { type: String, default: "Soporte general" },
 });
 
+// Botones para el panel tipo Contact System
+const customButtonSchema = new mongoose.Schema({
+    id: { type: String, required: true },
+    label: { type: String, required: true },
+    emoji: { type: String, default: "🎫" },
+    color: { type: String, enum: ["primary", "secondary", "success", "danger"], default: "primary" },
+    description: { type: String, default: "" },
+    categoryId: { type: String, default: "" },
+}, { _id: false });
+
+const customPanelSchema = new mongoose.Schema({
+    banner: { type: String, default: "" },
+    title: { type: String, default: "Contact System" },
+    description: { type: String, default: "Selecciona una opción para abrir un ticket." },
+    color: { type: String, default: "#5865F2" },
+    buttons: { type: [customButtonSchema], default: [] },
+}, { _id: false });
+
 const embedFieldSchema = new mongoose.Schema({
     name: { type: String, default: "\u200b" },
     value: { type: String, default: "\u200b" },
@@ -60,12 +78,19 @@ const guildSchema = new mongoose.Schema({
     ticketCounter: { type: Number, default: 0 },
     totalTicketsCreated: { type: Number, default: 0 },
     
+    // ═══ Modo del Panel de Tickets ═══
+    ticketMode: { type: String, enum: ["classic", "custom"], default: "classic" },
+    customPanel: { type: customPanelSchema, default: () => ({}) },
+
     // ═══ Sistema Premium ═══
     isPremium: { type: Boolean, default: false },
     premium: {
         active: { type: Boolean, default: false },
         expiresAt: { type: Date, default: null },
         permanent: { type: Boolean, default: false },
+        grantedBy: { type: String, default: null },
+        reason: { type: String, default: "" },
+        startDate: { type: Date, default: null },
     },
 
     // ═══ Moderación ═══

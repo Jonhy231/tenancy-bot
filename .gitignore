@@ -3,3 +3,9 @@ node_modules
 *.log
 .DS_Store
 Thumbs.db
+
+# React client build output (se genera en Railway durante el build)
+src/dashboard/dist/
+
+# Client dependencies (Railway las instala con npm run build)
+src/dashboard/client/node_modules/
