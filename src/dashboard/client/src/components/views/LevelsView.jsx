@@ -40,9 +40,15 @@ export default function LevelsView({ guildId }) {
   }
 
   const addReward = () => {
-    const lvl = parseInt(newLevel)
-    if (!lvl || lvl <= 0 || !newRole) return toast('Completa nivel y rol', 'error')
-    if (config.roleRewards.some(r => r.level === lvl)) return toast('Ya hay recompensa para este nivel', 'error')
+    if (!newLevel) return toast('Por favor, ingresa un nivel.', 'error')
+    
+    const lvl = parseInt(newLevel, 10)
+    if (isNaN(lvl) || lvl <= 0) return toast('El nivel debe ser un número mayor a 0.', 'error')
+    
+    if (!newRole) return toast('Por favor, selecciona un rol.', 'error')
+    
+    if (config.roleRewards.some(r => r.level === lvl)) return toast(`Ya hay una recompensa configurada para el nivel ${lvl}.`, 'error')
+    if (config.roleRewards.some(r => r.roleId === newRole)) return toast('Este rol ya está asignado como recompensa en otro nivel.', 'error')
     
     setConfig({ ...config, roleRewards: [...config.roleRewards, { level: lvl, roleId: newRole }].sort((a,b) => a.level - b.level) })
     setNewLevel('')
@@ -117,7 +123,7 @@ export default function LevelsView({ guildId }) {
             <div className="card-header"><h3>🎁 Roles por Nivel</h3></div>
             <div className="card-body">
               <div style={{ display:'flex', gap:8, marginBottom:16 }}>
-                <input type="number" className="form-input" placeholder="Nivel (ej: 5)" value={newLevel} onChange={e => setNewLevel(e.target.value)} style={{ width: 100 }} />
+                <input type="number" min="1" className="form-input" placeholder="Nivel (ej: 5)" value={newLevel} onChange={e => setNewLevel(e.target.value)} style={{ width: 140 }} />
                 <select className="form-input" value={newRole} onChange={e => setNewRole(e.target.value)}>
                   <option value="">Selecciona un Rol...</option>
                   {roles.map(r => <option key={r.id} value={r.id} style={{ color: r.color !== '#000000' ? r.color : undefined }}>{r.name}</option>)}
